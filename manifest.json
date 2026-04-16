@@ -1,0 +1,18 @@
+{
+  "name": "Dashboard Suivi Trail",
+  "short_name": "Dashboard Trail",
+  "description": "Suivi de préparation trail hors ligne — Seb Run Nature",
+  "start_url": "/dashboard-suivi-trail/",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#1e3a5f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/dashboard-suivi-trail/icon_dashboard.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
