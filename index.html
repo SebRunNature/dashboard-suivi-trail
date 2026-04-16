@@ -1620,6 +1620,15 @@ th.watts-col, td.watts-col {
             .week-days-grid { grid-template-columns: repeat(4, 1fr); }
         }
 </style>
+	<link rel="manifest" href="/dashboard-suivi-trail/manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dashboard Trail">
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/dashboard-suivi-trail/sw.js');
+}
+</script>
 </head>
 <body>
 
