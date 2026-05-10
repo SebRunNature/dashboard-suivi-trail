@@ -1,4 +1,4 @@
-const CACHE = 'srn-dashboard-trail-v31';
+const CACHE = 'srn-dashboard-trail-v32';
 const FILES = [
   '/dashboard-suivi-trail/',
   '/dashboard-suivi-trail/index.html',
