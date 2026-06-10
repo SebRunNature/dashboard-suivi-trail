@@ -17,8 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --font-main: 'Inter', 'Nunito', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --font-main: 'Nunito', sans-serif;
+            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
             --green:     #2d9e72;
             --green-dk:  #1e7a56;
             --green-lt:  #e6f7f1;
@@ -231,6 +231,29 @@
             gap: 14px;
             position: relative; z-index: 10;
         }
+        /* ── Records personnels ── */
+        .records-section {
+            max-width: 1100px; margin: 18px auto 0; padding: 0 20px;
+        }
+        .records-title {
+            font-size: .8rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .8px; color: var(--muted); margin-bottom: 10px;
+        }
+        .records-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .record-chip {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 12px 14px;
+            box-shadow: var(--shadow);
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .record-chip .rc-label { font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+        .record-chip .rc-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+        .record-chip .rc-date  { font-size: .7rem; color: var(--muted); }
+        .record-chip.new-record { border-color: var(--amber); background: var(--amber-lt); }
         .stat-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -2087,6 +2110,12 @@ th.effort-col, td.effort-col {
     </div>
 </div>
 
+<!-- ── RECORDS PERSONNELS ─────────────────────────── -->
+<div class="records-section" id="recordsSection" style="display:none">
+    <div class="records-title">🏆 Records personnels</div>
+    <div class="records-grid" id="recordsGrid"></div>
+</div>
+
 <!-- ── BACKUP REMINDER BANNER ─────────────────────── -->
 <div class="backup-banner" id="backupBanner" style="display:none">
     <div class="backup-banner-inner">
@@ -2210,6 +2239,7 @@ th.effort-col, td.effort-col {
                         <th class="fcrpe-col">❤️ FC / RPE</th>
                         <th class="effort-col">⚡ Effort</th>
                         <th>📋</th>
+                        <th>✏️</th>
                         <th>🎬</th>
                         <th></th>
                     </tr>
@@ -2775,6 +2805,19 @@ function showToast(msg, duration = 2800) {
     setTimeout(() => t.classList.remove('show'), duration);
 }
 
+/* ── Échappement HTML (anti-XSS) ──
+   À utiliser pour TOUT contenu non maîtrisé injecté via innerHTML :
+   notes, nutrition, nom d'activité GPX, réponses du Coach IA... */
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Valide une couleur hex fournie par une source externe (Coach IA) */
+function safeColor(c, fallback = '#888') {
+    return /^#[0-9a-fA-F]{3,8}$/.test(String(c || '')) ? c : fallback;
+}
+
 /* ─────────────────────────────────────────
    SPEED HELPERS
 ───────────────────────────────────────── */
@@ -2987,6 +3030,10 @@ function closeModal() {
     document.getElementById('modalOverlay').classList.remove('open');
     resetGpxUI();
     clearAllModalErrors();
+    // Sortir du mode édition et restaurer le bouton d'ajout
+    editingEntryId = null;
+    const btn = document.getElementById('btnModalConfirm');
+    if (btn) btn.textContent = '⚡ Enregistrer la séance';
 }
 
 function closeModalIfOverlay(e) {
@@ -3003,8 +3050,53 @@ function switchTab(tab) {
 }
 
 /* ─────────────────────────────────────────
-   ADD ENTRY FROM MODAL
+   ADD / EDIT ENTRY FROM MODAL
 ───────────────────────────────────────── */
+let editingEntryId = null; // null = mode ajout, sinon id de la séance en cours d'édition
+
+function editEntry(id) {
+    const entry = getEntries().find(e => String(e.id) === String(id));
+    if (!entry) return;
+
+    openModal('manual'); // reset + ouverture (met la date du jour, on écrase ensuite)
+    editingEntryId = entry.id;
+
+    // Pré-remplissage des champs
+    const set = (fid, val) => { const el = document.getElementById(fid); if (el) el.value = val; };
+    set('m-date',      entry.date || '');
+    set('m-moment',    entry.moment || 'Matin');
+    set('m-type',      entry.type || 'Course');
+    toggleModalFields(); // afficher les bons champs selon le type
+    set('m-km',        entry.km || '');
+    set('m-dplus',     entry.dplus || '');
+    set('m-minutes',   entry.minutes || '');
+    set('m-bpm',       entry.bpm || '');
+    set('m-rpe',       entry.rpe || 5);
+    set('m-liquide',   entry.liquide || '');
+    set('m-nutrition', entry.nutrition || '');
+    set('m-notes',     entry.notes || '');
+    set('m-gilet',     entry.gilet || '');
+    if (entry.watts) {
+        const w = document.getElementById('m-watts');
+        if (w) { w.value = entry.watts; w.dataset.manual = '1'; }
+    }
+
+    // Restaurer la sélection d'exercices depuis le tag [Exo: ...] des notes
+    const exoMatch = (entry.notes || '').match(/\[Exo:\s*([^\]]*)\]/);
+    if (exoMatch) {
+        window._selectedExosModal = exoMatch[1].split('·').map(s => s.trim()).filter(Boolean);
+        const prev = document.getElementById('m-renfoExoPreview');
+        if (prev) prev.textContent = window._selectedExosModal.join(' · ');
+    }
+
+    updateModalSpeed(); // rafraîchir le preview vitesse
+
+    // Adapter titre et bouton au mode édition
+    document.getElementById('modalTitle').textContent = '✏️ Modifier la séance';
+    const btn = document.getElementById('btnModalConfirm');
+    if (btn) btn.textContent = '💾 Enregistrer les modifications';
+}
+
 function addEntryFromModal() {
     if (!validateForm('m-')) {
         shakeBtn('btnModalConfirm');
@@ -3019,8 +3111,12 @@ function addEntryFromModal() {
     const s          = showSpeedM ? calcSpeed(km, min) : null;
     const wattsValue = hasWattsManuel(type) ? Number(document.getElementById('m-watts') ? document.getElementById('m-watts').value : 0) || 0 : 0;
 
+    const isEditing = editingEntryId !== null;
+    const entries   = getEntries();
+    const existing  = isEditing ? entries.find(e => String(e.id) === String(editingEntryId)) : null;
+
     const entry = {
-        id:        Date.now(),
+        id:        isEditing ? editingEntryId : Date.now(),
         date:      document.getElementById('m-date').value,
         moment:    document.getElementById('m-moment').value,
         type,
@@ -3036,14 +3132,20 @@ function addEntryFromModal() {
         watts:     wattsValue,
         notes:     document.getElementById('m-notes').value.trim(),
         gilet:     Number(document.getElementById('m-gilet') ? document.getElementById('m-gilet').value : 0) || 0,
-        source:    'manual'
+        source:    existing ? (existing.source || 'manual') : 'manual' // conserver l'origine (gpx) en édition
     };
-    const entries = getEntries();
-    entries.push(entry);
+
+    if (isEditing) {
+        const idx = entries.findIndex(e => String(e.id) === String(editingEntryId));
+        if (idx !== -1) entries[idx] = entry; else entries.push(entry);
+    } else {
+        entries.push(entry);
+    }
     saveEntries(entries);
     renderAll();
     closeModal();
-    showToast('✅ Séance enregistrée !');
+    showToast(isEditing ? '💾 Séance modifiée !' : '✅ Séance enregistrée !');
+    editingEntryId = null;
     autoBackupIfNeeded();
 }
 
@@ -3109,9 +3211,14 @@ function parseGpxFile(file) {
 
             // Calculate distance (haversine)
             let totalDistKm = 0;
-            let totalDplus = 0;
-            let prevLat = null, prevLon = null, prevEle = null;
+            let prevLat = null, prevLon = null;
             let startTime = null, endTime = null;
+
+            // Altitudes collectées pour calcul du D+ après lissage
+            const elevations = [];
+
+            // Fréquence cardiaque (extensions Garmin/Suunto/Coros : gpxtpx:hr)
+            let hrSum = 0, hrCount = 0, hrMax = 0;
 
             trkpts.forEach((pt, i) => {
                 const lat = parseFloat(pt.getAttribute('lat'));
@@ -3121,17 +3228,25 @@ function parseGpxFile(file) {
                 const ele = eleEl ? parseFloat(eleEl.textContent) : null;
                 const time = timeEl ? new Date(timeEl.textContent) : null;
 
+                // FC : balise <hr> quelle que soit sa namespace (gpxtpx, ns3...)
+                const hrEl = pt.getElementsByTagNameNS('*', 'hr')[0];
+                if (hrEl) {
+                    const hr = parseInt(hrEl.textContent);
+                    if (hr > 0) { hrSum += hr; hrCount++; if (hr > hrMax) hrMax = hr; }
+                }
+
                 if (i === 0 && time) startTime = time;
                 if (time) endTime = time;
 
                 if (prevLat !== null) {
                     totalDistKm += haversine(prevLat, prevLon, lat, lon);
                 }
-                if (ele !== null && prevEle !== null && ele > prevEle) {
-                    totalDplus += (ele - prevEle);
-                }
-                prevLat = lat; prevLon = lon; prevEle = ele;
+                if (ele !== null && !isNaN(ele)) elevations.push(ele);
+                prevLat = lat; prevLon = lon;
             });
+
+            const totalDplus = computeDplus(elevations);
+            const avgHr = hrCount > 0 ? Math.round(hrSum / hrCount) : 0;
 
             // Duration from time tags or default
             let durationMin = 0;
@@ -3160,8 +3275,8 @@ function parseGpxFile(file) {
                 liquide:   '',
                 nutrition: '',
                 rpe:       5,
-                bpm:       0,
-                notes:     activityName,
+                bpm:       avgHr,
+                notes:     activityName + (hrMax > 0 ? ` [FC max: ${hrMax}]` : ''),
                 source:    'gpx'
             };
 
@@ -3169,7 +3284,7 @@ function parseGpxFile(file) {
             document.getElementById('gpxSkippedBox').classList.add('hidden');
             document.getElementById('gpxResultBox').classList.remove('hidden');
             document.getElementById('gpxResult').innerHTML = `
-                <div class="gpx-result-title">✅ Activité détectée : <em>${activityName}</em></div>
+                <div class="gpx-result-title">✅ Activité détectée : <em>${esc(activityName)}</em></div>
                 <div class="gpx-result-grid">
                     <div class="gpx-result-item">
                         <div class="val">${totalDistKm.toFixed(2)} km</div>
@@ -3195,6 +3310,11 @@ function parseGpxFile(file) {
                         <div class="val">${actDate}</div>
                         <div class="lbl">Date</div>
                     </div>
+                    ${avgHr > 0 ? `
+                    <div class="gpx-result-item">
+                        <div class="val" style="color:#e05252">❤️ ${avgHr}${hrMax > 0 ? ` <span style="font-size:.7em;opacity:.7">(max ${hrMax})</span>` : ''}</div>
+                        <div class="lbl">FC moy</div>
+                    </div>` : ''}
                 </div>
             `;
             document.getElementById('gpxConfirmBtn').classList.remove('hidden');
@@ -3215,6 +3335,32 @@ function haversine(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+/* ── D+ anti-bruit GPS ──
+   L'altitude GPS oscille de ±2-5 m : additionner naïvement chaque micro-montée
+   gonfle le D+ de 30 à 50 %. Méthode (identique au principe Strava/Garmin) :
+   1. Lissage par moyenne mobile (fenêtre de `win` points)
+   2. Hystérésis : une montée n'est comptée que si le gain cumulé depuis
+      le dernier point bas dépasse `threshold` mètres. */
+function computeDplus(eles, win = 5, threshold = 5) {
+    if (!eles || eles.length < 2) return 0;
+    // 1. Moyenne mobile centrée
+    const half = Math.floor(win / 2);
+    const smooth = eles.map((_, i) => {
+        const a = Math.max(0, i - half);
+        const b = Math.min(eles.length, i + half + 1);
+        let s = 0;
+        for (let j = a; j < b; j++) s += eles[j];
+        return s / (b - a);
+    });
+    // 2. Hystérésis avec seuil
+    let total = 0, ref = smooth[0];
+    for (const e of smooth) {
+        if (e - ref >= threshold) { total += e - ref; ref = e; }
+        else if (e < ref) ref = e;
+    }
+    return total;
+}
+
 function confirmGpxImport() {
     if (!pendingGpxEntry) return;
     const entries = getEntries();
@@ -3233,12 +3379,76 @@ function confirmGpxImport() {
 function renderAll() {
     const entries = getEntries();
     renderStats(entries);
+    renderRecords(entries);
     renderReadiness();
     renderWeekView(entries);
     renderChargeIndicator(entries);
     renderWeeklyChart(entries);
     applyFilters(); // handles renderTable with filters
     initCoach();
+}
+
+/* ─────────────────────────────────────────
+   RECORDS PERSONNELS 🏆
+───────────────────────────────────────── */
+function renderRecords(entries) {
+    const section = document.getElementById('recordsSection');
+    const grid    = document.getElementById('recordsGrid');
+    if (!section || !grid) return;
+
+    // Uniquement les séances à distance (Course, Trail, Marche, Tapis)
+    const dist = entries.filter(e => isDistanceType(e.type) && Number(e.km) > 0);
+    if (dist.length < 2) { section.style.display = 'none'; return; }
+
+    const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    const fmtDate = d => { const [y,m,dd] = d.split('-'); return `${dd} ${months[parseInt(m)-1]} ${y}`; };
+    const best = (arr, fn) => arr.reduce((a,b) => fn(b) > fn(a) ? b : a);
+
+    // Plus longue sortie (km)
+    const longest = best(dist, e => Number(e.km));
+    // Meilleure vitesse (course/trail uniquement, min 3 km pour éviter les sprints anecdotiques)
+    const speedPool = dist.filter(e => isCourseType(e.type) && Number(e.km) >= 3 &&
+        (Number(e.speedKmh) > 0 || (e.km && e.minutes)));
+    const speedOf = e => Number(e.speedKmh) > 0 ? Number(e.speedKmh)
+        : (calcSpeed(e.km, e.minutes) ? parseFloat(calcSpeed(e.km, e.minutes).speedKmh) : 0);
+    const fastest = speedPool.length ? best(speedPool, speedOf) : null;
+    // Plus gros D+ en une sortie
+    const dplusPool = dist.filter(e => Number(e.dplus) > 0);
+    const biggestDplus = dplusPool.length ? best(dplusPool, e => Number(e.dplus)) : null;
+    // Plus longue durée
+    const durPool = entries.filter(e => Number(e.minutes) > 0);
+    const longestDur = durPool.length ? best(durPool, e => Number(e.minutes)) : null;
+    // Plus grosse semaine (km) — semaine ISO lun→dim
+    const weekKey = dStr => {
+        const d = new Date(dStr + 'T12:00:00');
+        const day = (d.getDay() + 6) % 7; // 0 = lundi
+        d.setDate(d.getDate() - day);
+        return d.toISOString().slice(0,10);
+    };
+    const weekTotals = {};
+    dist.forEach(e => { const k = weekKey(e.date); weekTotals[k] = (weekTotals[k] || 0) + Number(e.km); });
+    const bestWeek = Object.entries(weekTotals).sort((a,b) => b[1] - a[1])[0];
+
+    const fmtDur = mins => {
+        const h = Math.floor(mins/60), m = mins % 60;
+        return h > 0 ? `${h}h${String(m).padStart(2,'0')}` : `${m} min`;
+    };
+
+    const chips = [
+        { label: '📏 Plus longue sortie', value: `${Number(longest.km).toFixed(1)} km`, date: fmtDate(longest.date) },
+        fastest      ? { label: '⚡ Meilleure vitesse', value: `${speedOf(fastest).toFixed(1)} km/h`, date: `${Number(fastest.km).toFixed(1)} km · ${fmtDate(fastest.date)}` } : null,
+        biggestDplus ? { label: '⛰ Plus gros D+', value: `${Math.round(Number(biggestDplus.dplus))} m`, date: fmtDate(biggestDplus.date) } : null,
+        longestDur   ? { label: '⏱ Plus longue durée', value: fmtDur(Number(longestDur.minutes)), date: fmtDate(longestDur.date) } : null,
+        bestWeek     ? { label: '📆 Plus grosse semaine', value: `${bestWeek[1].toFixed(1)} km`, date: `sem. du ${fmtDate(bestWeek[0])}` } : null
+    ].filter(Boolean);
+
+    grid.innerHTML = chips.map(c => `
+        <div class="record-chip">
+            <div class="rc-label">${c.label}</div>
+            <div class="rc-value">${c.value}</div>
+            <div class="rc-date">${c.date}</div>
+        </div>`).join('');
+    section.style.display = 'block';
 }
 
 /* ═══════════════════════════════════════════════
@@ -3355,8 +3565,8 @@ function renderTable(entries) {
             : `${item.minutes} min`;
         const dplusTxt = hasDist ? `${Math.round(Number(item.dplus))} m` : '—';
         const nutrition = [
-            item.liquide   ? `💧 ${item.liquide}`   : '',
-            item.nutrition ? `🍎 ${item.nutrition}` : ''
+            item.liquide   ? `💧 ${esc(item.liquide)}`   : '',
+            item.nutrition ? `🍎 ${esc(item.nutrition)}` : ''
         ].filter(Boolean).join('<br>') || '—';
 
         const rpeVal = item.rpe || 5;
@@ -3416,6 +3626,7 @@ function renderTable(entries) {
             <td class="fcrpe-col">${fcRpeCell}</td>
             <td class="effort-col">${effortCell}</td>
             <td><button class="detail-btn" onclick="openDetailModal(${item.id})" title="Voir détails (nutrition, notes, gilet)">📋</button></td>
+            <td><button class="detail-btn" onclick="editEntry(${item.id})" title="Modifier la séance">✏️</button></td>
             <td><button class="video-btn" onclick="openVideoModal(${item.id})" title="Générer vidéo animée">🎬</button></td>
             <td><button class="delete-btn" onclick="deleteEntry(${item.id})" title="Supprimer">🗑</button></td>
         `;
@@ -3632,9 +3843,9 @@ function exportCSV() {
                 e.watts || '',
                 kcal !== null ? kcal : '',
                 e.gilet || '',
-                (e.notes || '').replace(/,/g, ';'),
+                e.notes || '',
                 e.source || 'manual'
-            ].map(v => `"${v}"`).join(',');
+            ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','); // RFC 4180 : guillemets doublés
         });
 
     const csv  = '\uFEFF' + [headers.join(','), ...rows].join('\r\n'); // BOM for Excel
@@ -3750,26 +3961,30 @@ function exportPDF() {
 /* ═══════════════════════════════════════════════
    SAUVEGARDE COMPLÈTE  (séances + titre + objectif trail + infos utilisateur)
 ═══════════════════════════════════════════════ */
-async function exportFullBackup() {
-    const entries    = getEntries();
-    const title      = localStorage.getItem('customTrailTitle') || '';
-    const goalRaw    = localStorage.getItem('trailGoal');
-    const goal       = goalRaw ? JSON.parse(goalRaw) : null;
-    const userInfo   = {
-        gender: localStorage.getItem('userGender') || '',
-        age:    localStorage.getItem('userAge')    || '',
-        height: localStorage.getItem('userHeight') || '',
-        weight: localStorage.getItem('userWeight') || ''
-    };
-    const lastBackup = new Date().toISOString();
-
-    const backup = {
+/* ── Construit l'objet de sauvegarde complet (utilisé par l'export
+      manuel ET l'auto-backup pour garantir un format identique) ── */
+function buildBackupObject(info) {
+    const goalRaw = localStorage.getItem('trailGoal');
+    return {
         _version:    3,
         _app:        'Run Nature – Suivi Trail',
-        _exportDate: lastBackup,
-        _info:       'Sauvegarde complète : séances + titre + objectif + infos perso',
-        title, entries, goal, userInfo
+        _exportDate: new Date().toISOString(),
+        _info:       info,
+        title:       localStorage.getItem('customTrailTitle') || '',
+        entries:     getEntries(),
+        goal:        goalRaw ? JSON.parse(goalRaw) : null,
+        userInfo: {
+            gender: localStorage.getItem('userGender') || '',
+            age:    localStorage.getItem('userAge')    || '',
+            height: localStorage.getItem('userHeight') || '',
+            weight: localStorage.getItem('userWeight') || ''
+        }
     };
+}
+
+async function exportFullBackup() {
+    const backup     = buildBackupObject('Sauvegarde complète : séances + titre + objectif + infos perso');
+    const lastBackup = backup._exportDate;
 
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const a    = document.createElement('a');
@@ -3780,7 +3995,7 @@ async function exportFullBackup() {
 
     localStorage.setItem('lastBackupDate', lastBackup);
     updateBackupBanner();
-    showToast(`💾 Sauvegarde : ${entries.length} séance(s) enregistrée(s) !`, 3500);
+    showToast(`💾 Sauvegarde : ${backup.entries.length} séance(s) enregistrée(s) !`, 3500);
 }
 
 function importFullBackup(e) {
@@ -3896,26 +4111,10 @@ async function autoBackupIfNeeded() {
 
     if (!triggerByTime && !triggerBySessions) return;
 
-    // Construire le backup (identique à exportFullBackup mais sans interaction)
+    // Construire le backup (format strictement identique à exportFullBackup)
     try {
-        const title      = localStorage.getItem('customTrailTitle') || '';
-        const goalRaw    = localStorage.getItem('trailGoal');
-        const goal       = goalRaw ? JSON.parse(goalRaw) : null;
-        const userInfo   = {
-            gender: localStorage.getItem('userGender') || '',
-            age:    localStorage.getItem('userAge')    || '',
-            height: localStorage.getItem('userHeight') || '',
-            weight: localStorage.getItem('userWeight') || ''
-        };
-        const exportDate = new Date().toISOString();
-
-        const backup = {
-            _version:    3,
-            _app:        'Run Nature – Suivi Trail',
-            _exportDate: exportDate,
-            _info:       'Sauvegarde automatique — à conserver dans un dossier sécurisé',
-            title, entries, goal, userInfo
-        };
+        const backup     = buildBackupObject('Sauvegarde automatique — à conserver dans un dossier sécurisé');
+        const exportDate = backup._exportDate;
 
         const dateStr = (function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(new Date());
         const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -4004,7 +4203,7 @@ function editTitle() {
     const newTitle = prompt('Nouveau titre :', current);
     if (newTitle && newTitle.trim()) {
         localStorage.setItem('customTrailTitle', newTitle.trim());
-        el.innerHTML = newTitle.trim() + `<span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>`;
+        el.innerHTML = esc(newTitle.trim()) + `<span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>`;
     }
 }
 
@@ -4014,7 +4213,7 @@ function editTitle() {
 function loadData() {
     const savedTitle = localStorage.getItem('customTrailTitle');
     if (savedTitle) {
-        document.getElementById('title').innerHTML = savedTitle + `<span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>`;
+        document.getElementById('title').innerHTML = esc(savedTitle) + `<span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>`;
     }
     initTheme();
     renderGoalBar();
@@ -5047,9 +5246,9 @@ RÈGLES :
 }
 
 function renderCoachResult(data) {
-    // Alerte (si signalée par le coach)
+    // Alerte (si signalée par le coach) — échappée : contenu généré par l'API
     const alerteHtml = (data.alerte && typeof data.alerte === 'string' && data.alerte.trim())
-        ? `<div class="coach-alerte">${data.alerte}</div>`
+        ? `<div class="coach-alerte">${esc(data.alerte)}</div>`
         : '';
 
     // Cartes analyse
@@ -5058,10 +5257,10 @@ function renderCoachResult(data) {
         <div class="coach-card">
             <div class="coach-card-head">
                 <div class="coach-status-dot" style="background:${statusColors[c.statut]||'#888'}"></div>
-                <div class="coach-card-title">${c.titre}</div>
-                <div class="coach-card-sub">${c.sousTitre||''}</div>
+                <div class="coach-card-title">${esc(c.titre)}</div>
+                <div class="coach-card-sub">${esc(c.sousTitre||'')}</div>
             </div>
-            <div class="coach-card-body">${c.corps.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+            <div class="coach-card-body">${esc(c.corps).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
         </div>`).join('');
     document.getElementById('coachCards').innerHTML = alerteHtml + cardsHtml;
 
@@ -5069,11 +5268,11 @@ function renderCoachResult(data) {
     window._coachPlanData = data.plan || [];
     const planHtml = data.plan.map(p => `
         <div class="coach-plan-item">
-            <div class="coach-plan-dot" style="background:${p.couleur||'#888'}"></div>
-            <div class="coach-plan-day">${p.jour}</div>
+            <div class="coach-plan-dot" style="background:${safeColor(p.couleur)}"></div>
+            <div class="coach-plan-day">${esc(p.jour)}</div>
             <div class="coach-plan-content">
-                <div class="coach-plan-type">${p.seance}</div>
-                <div class="coach-plan-detail">${p.detail}</div>
+                <div class="coach-plan-type">${esc(p.seance)}</div>
+                <div class="coach-plan-detail">${esc(p.detail)}</div>
             </div>
         </div>`).join('');
     document.getElementById('coachPlan').innerHTML = planHtml;
@@ -5121,11 +5320,11 @@ function printCoachPlan() {
     const rowsHtml = plan.map(p => `
         <tr>
             <td style="padding:10px 14px;font-weight:800;color:#111;border-bottom:1px solid #e8f0ed;white-space:nowrap">
-                <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.couleur||'#888'};margin-right:8px;vertical-align:middle"></span>
-                ${p.jour}
+                <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${safeColor(p.couleur)};margin-right:8px;vertical-align:middle"></span>
+                ${esc(p.jour)}
             </td>
-            <td style="padding:10px 14px;font-weight:700;color:#1a4a32;border-bottom:1px solid #e8f0ed">${p.seance}</td>
-            <td style="padding:10px 14px;color:#4b5563;border-bottom:1px solid #e8f0ed;font-size:13px">${p.detail}</td>
+            <td style="padding:10px 14px;font-weight:700;color:#1a4a32;border-bottom:1px solid #e8f0ed">${esc(p.seance)}</td>
+            <td style="padding:10px 14px;color:#4b5563;border-bottom:1px solid #e8f0ed;font-size:13px">${esc(p.detail)}</td>
         </tr>`).join('');
 
     const html = `<!DOCTYPE html>
@@ -6106,11 +6305,11 @@ function openDetailModal(id) {
     const gilet     = Number(entry.gilet) || 0;
 
     const nutritionHtml = (liquide || nutrition)
-        ? `${liquide   ? `💧 ${liquide}<br>` : ''}${nutrition ? `🍎 ${nutrition}` : ''}`
+        ? `${liquide   ? `💧 ${esc(liquide)}<br>` : ''}${nutrition ? `🍎 ${esc(nutrition)}` : ''}`
         : `<span class="detail-empty">Aucune nutrition renseignée</span>`;
 
     const notesHtml = notes
-        ? notes
+        ? esc(notes)
         : `<span class="detail-empty">Aucune note</span>`;
 
     body.innerHTML = `
@@ -6308,7 +6507,38 @@ if (savedAge !== null && document.getElementById("userAge")) {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('/dashboard-suivi-trail/sw.js')
-            .then(function(reg) { console.log('SW enregistré :', reg.scope); })
+            .then(function(reg) {
+                console.log('SW enregistré :', reg.scope);
+
+                // ── Notification "nouvelle version disponible" ──
+                function showUpdateBanner() {
+                    if (document.getElementById('swUpdateBanner')) return;
+                    const b = document.createElement('div');
+                    b.id = 'swUpdateBanner';
+                    b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);' +
+                        'background:#1e2e28;color:#fff;padding:12px 18px;border-radius:14px;' +
+                        'box-shadow:0 10px 25px rgba(0,0,0,.3);z-index:99999;display:flex;' +
+                        'align-items:center;gap:14px;font-family:Nunito,sans-serif;font-size:.9rem;font-weight:700;';
+                    b.innerHTML = '🔄 Nouvelle version disponible' +
+                        '<button onclick="location.reload()" style="background:#2d9e72;color:#fff;border:none;' +
+                        'padding:8px 14px;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;">Recharger</button>';
+                    document.body.appendChild(b);
+                }
+
+                // Nouveau SW déjà en attente (cas d'un retour sur l'app)
+                if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
+
+                // Nouveau SW détecté pendant la session
+                reg.addEventListener('updatefound', function() {
+                    const newWorker = reg.installing;
+                    if (!newWorker) return;
+                    newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdateBanner();
+                        }
+                    });
+                });
+            })
             .catch(function(err) { console.warn('SW échec :', err); });
     });
 }
