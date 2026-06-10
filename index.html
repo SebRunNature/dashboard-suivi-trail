@@ -387,6 +387,23 @@
             transition: all .3s;
         }
         .speed-preview.active { background: linear-gradient(135deg, #ffe0f3, #ffd0ec); }
+        .watts-velo-preview {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--green-lt);
+            border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+            border-radius: 9px;
+            padding: 10px 13px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--green-dk);
+            min-height: 42px;
+            transition: background .25s;
+        }
+        [data-theme="dark"] .watts-velo-preview {
+            background: #0f3d2e;
+            color: var(--green-bright);
+            border-color: rgba(93,202,165,.3);
+        }
 
         .btn-add {
             background: linear-gradient(135deg, var(--green), var(--green-dk));
@@ -2758,9 +2775,14 @@ th.effort-col, td.effort-col {
                         <small id="m-renfoExoPreview" style="color:var(--muted);font-size:.75rem;margin-top:4px;display:block;"></small>
                     </div>
                     <div class="form-group full" id="m-wattsGroup" style="display:none;">
-                        <label id="m-wattsLabel">⚡ Watts Home Trainer</label>
+                        <label id="m-wattsLabel">⚡ Watts</label>
                         <input type="number" id="m-watts" min="0" step="1" placeholder="Watts affichés sur la machine" oninput="this.dataset.manual='true'">
-                        <small style="color:var(--muted);font-size:.75rem">⚡ Calculé automatiquement si distance renseignée</small>
+                        <small id="m-wattsHint" style="color:var(--muted);font-size:.75rem">Valeur lue sur l'écran de la machine</small>
+                    </div>
+                    <div class="form-group full" id="m-wattsVeloGroup" style="display:none;">
+                        <label>⚡ Puissance estimée</label>
+                        <div class="watts-velo-preview" id="m-wattsVeloPreview">– W</div>
+                        <small style="color:var(--muted);font-size:.75rem">Estimée automatiquement depuis la distance et la durée</small>
                     </div>
                     <div class="form-group full">
                         <label>Notes</label>
@@ -2961,6 +2983,22 @@ function updateModalSpeed() {
         el.textContent = '– km/h (– min/km)';
         el.classList.remove('active');
     }
+
+    // Aperçu de puissance estimée pour le Vélo Home Trainer
+    const veloPreview = document.getElementById('m-wattsVeloPreview');
+    if (veloPreview && document.getElementById('m-type').value === 'Vélo Home Trainer') {
+        const weight = parseFloat(localStorage.getItem('userWeight')) || 0;
+        const calc = calculateWattsVelo(Number(km) || 0, Number(min) || 0, weight);
+        if (calc.watts > 0) {
+            veloPreview.textContent = weight > 0
+                ? `~${calc.watts} W  ·  ${calc.wkg} W/kg`
+                : `~${calc.watts} W`;
+            veloPreview.classList.add('active');
+        } else {
+            veloPreview.textContent = '– W';
+            veloPreview.classList.remove('active');
+        }
+    }
 }
 
 function toggleModalFields() {
@@ -2991,24 +3029,23 @@ function toggleModalFields() {
     if (!isRenfo) { document.getElementById('m-renfoExoPreview').textContent = ''; window._selectedExosModal = []; }
 
     // Watts modal
-    const mWattsGroup = document.getElementById('m-wattsGroup');
-    if (mWattsGroup) {
-        const showManuel = hasWattsManuel(type);
-        mWattsGroup.style.display = showManuel ? '' : 'none';
-        const mWattsLabel = document.getElementById('m-wattsLabel');
-        if (mWattsLabel) {
-            if (type === 'Vélo Home Trainer') mWattsLabel.textContent = '⚡ Watts Home Trainer';
-            else if (type === 'Rameur')       mWattsLabel.textContent = '⚡ Watts (Concept2 / écran)';
-            else if (type === 'Elliptique')   mWattsLabel.textContent = '⚡ Watts (écran machine)';
-        }
-        // Si on bascule vers un type sans watts manuel, on vide le champ
-        // pour éviter qu'une valeur fantôme soit enregistrée plus tard
-        if (!showManuel) {
-            const mWattsInput = document.getElementById('m-watts');
-            if (mWattsInput) {
-                mWattsInput.value = '';
-                if (mWattsInput.dataset.manual) delete mWattsInput.dataset.manual;
-            }
+    const mWattsGroup     = document.getElementById('m-wattsGroup');      // saisie manuelle (Elliptique/Rameur)
+    const mWattsVeloGroup = document.getElementById('m-wattsVeloGroup');  // estimation (Vélo HT)
+    const showManuel = hasWattsManuel(type) && type !== 'Vélo Home Trainer';
+    if (mWattsGroup)     mWattsGroup.style.display     = showManuel ? '' : 'none';
+    if (mWattsVeloGroup) mWattsVeloGroup.style.display = isVelo ? '' : 'none';
+
+    const mWattsLabel = document.getElementById('m-wattsLabel');
+    if (mWattsLabel) {
+        if (type === 'Rameur')          mWattsLabel.textContent = '⚡ Watts (Concept2 / écran)';
+        else if (type === 'Elliptique') mWattsLabel.textContent = '⚡ Watts (écran machine)';
+    }
+    // Quitter un type à saisie manuelle → vider le champ pour éviter une valeur fantôme
+    if (!showManuel) {
+        const mWattsInput = document.getElementById('m-watts');
+        if (mWattsInput) {
+            mWattsInput.value = '';
+            if (mWattsInput.dataset.manual) delete mWattsInput.dataset.manual;
         }
     }
     updateModalSpeed();
@@ -3192,7 +3229,7 @@ function editEntry(id) {
     set('m-nutrition', entry.nutrition || '');
     set('m-notes',     entry.notes || '');
     set('m-gilet',     entry.gilet || '');
-    if (entry.watts) {
+    if (entry.watts && entry.type !== 'Vélo Home Trainer') {
         const w = document.getElementById('m-watts');
         if (w) { w.value = entry.watts; w.dataset.manual = '1'; }
     }
@@ -3225,7 +3262,16 @@ function addEntryFromModal() {
     const km         = hasKmM ? Number(document.getElementById('m-km').value) || 0 : 0;
     const min        = Number(document.getElementById('m-minutes').value) || 0;
     const s          = showSpeedM ? calcSpeed(km, min) : null;
-    const wattsValue = hasWattsManuel(type) ? Number(document.getElementById('m-watts') ? document.getElementById('m-watts').value : 0) || 0 : 0;
+    let wattsValue = 0;
+    if (type === 'Vélo Home Trainer') {
+        // Watts estimés depuis distance + durée
+        const weight = parseFloat(localStorage.getItem('userWeight')) || 0;
+        wattsValue = calculateWattsVelo(km, min, weight).watts;
+    } else if (hasWattsManuel(type)) {
+        // Elliptique / Rameur : valeur saisie sur l'écran de la machine
+        const wEl = document.getElementById('m-watts');
+        wattsValue = wEl ? Number(wEl.value) || 0 : 0;
+    }
 
     const isEditing = editingEntryId !== null;
     const entries   = getEntries();
@@ -6342,16 +6388,51 @@ function calculateWatts(km, minutes, dplus, weightKg) {
     return { watts, wkg };
 }
 
+/* Estimation de puissance pour le VÉLO / HOME TRAINER à partir de
+   la distance et de la durée (pas de capteur de puissance).
+   Modèle physique simplifié : P = Crr·m·g·v + ½·ρ·CdA·v³ + pertes transmission.
+   Calibré pour un cycliste lambda sur home trainer (terrain plat, intérieur). */
+function calculateWattsVelo(km, minutes, weightKg) {
+    const hours = minutes / 60;
+    if (hours <= 0 || km <= 0) return { watts: 0, wkg: 0 };
+
+    const v = (km / hours) * 1000 / 3600;        // vitesse en m/s
+    const m = (weightKg > 0 ? weightKg : 75) + 8; // cycliste + vélo (~8 kg)
+    const g = 9.81;
+
+    const Crr = 0.005;                            // résistance roulement (home trainer)
+    const rho = 1.225;                            // densité de l'air
+    const CdA = 0.32;                             // surface frontale × Cx (position route)
+
+    const pRoll = Crr * m * g * v;                // résistance de roulement
+    const pAero = 0.5 * rho * CdA * v * v * v;    // résistance aérodynamique
+    const power = (pRoll + pAero) / 0.97;         // rendement transmission ~97%
+
+    const watts = Math.round(power);
+    const wkg   = weightKg > 0 ? (watts / weightKg).toFixed(1) : 0;
+    return { watts, wkg };
+}
+
 // Affichage des watts dans le tableau
 function getWattsDisplay(entry) {
     const weight = parseFloat(localStorage.getItem('userWeight')) || 0;
 
-    // Watts manuels (Vélo HT, Elliptique, Rameur)
+    // Vélo Home Trainer : watts ESTIMÉS depuis distance + durée
+    if (entry.type === 'Vélo Home Trainer') {
+        const calc = calculateWattsVelo(entry.km || 0, entry.minutes || 0, weight);
+        if (calc.watts > 0) {
+            const wkgPart = weight > 0 ? `<span class="watts-sub">(${calc.wkg} W/kg)</span>` : '';
+            return `<span class="watts-value">~${calc.watts} W</span>${wkgPart}`;
+        }
+        return '—';
+    }
+
+    // Elliptique / Rameur : watts saisis manuellement (écran de la machine)
     if (hasWattsManuel(entry.type)) {
         return entry.watts ? `<span class="watts-value">${entry.watts} W</span>` : '—';
     }
 
-    // Watts calculés (Course, Trail, Tapis de course)
+    // Watts calculés course/trail/tapis
     if (hasWattsCalc(entry.type) && weight > 0) {
         const calc = calculateWatts(entry.km || 0, entry.minutes || 0, entry.dplus || 0, weight);
         if (calc.watts > 0) {
