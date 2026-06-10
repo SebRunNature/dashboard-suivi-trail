@@ -14,28 +14,44 @@
     <link rel="apple-touch-icon" href="/dashboard-suivi-trail/icon-180.png">
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --font-main: 'Nunito', sans-serif;
-            --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-            --green:     #2d9e72;
-            --green-dk:  #1e7a56;
-            --green-lt:  #e6f7f1;
-            --earth:     #8b5e3c;
-            --earth-lt:  #fdf3ec;
-            --sky:       #3a7bd5;
-            --sky-lt:    #eaf1fd;
-            --amber:     #e8a020;
-            --amber-lt:  #fdf5e2;
-            --red:       #e05252;
-            --bg:        #fdf8f4;
+            --font-main:    'Inter', system-ui, sans-serif;
+            --font-display: 'Sora', 'Inter', sans-serif;
+            --font-mono:    ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+            /* Accent unique (vert) + ses dérivés data */
+            --green:     #1d9e75;
+            --green-dk:  #0f6e56;
+            --green-lt:  #e1f5ee;
+            /* Couleurs réservées à la DONNÉE (RPE, alertes, intensité) */
+            --sky:       #378add;
+            --sky-lt:    #e6f1fb;
+            --amber:     #ba7517;
+            --amber-lt:  #faeeda;
+            --red:       #e24b4a;
+            /* compat : earth ne sert plus que de neutre chaud */
+            --earth:     #8a7d6a;
+            --earth-lt:  #f3efe7;
+
+            /* Surfaces — crème chaud (corps de l'app) */
+            --bg:        #faf5ef;
             --card:      #ffffff;
-            --text:      #1e2e28;
-            --muted:     #6b857c;
-            --border:    #d8ece4;
-            --shadow:    0 2px 8px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
-            --shadow-lg:  0 10px 25px rgba(0,0,0,.08);
+            --text:      #241f1a;
+            --muted:     #7d756a;
+            --border:    #e9e1d4;
+
+            /* Hero sombre (charbon chaud teinté forêt) */
+            --hero-bg-1: #0d1410;
+            --hero-bg-2: #16221b;
+            --hero-text: #f2ede4;
+            --hero-accent: #5dcaa5;
+            --hero-muted: #9fe1cb;
+            --green-bright: #5dcaa5;
+
+            --shadow:    0 1px 2px rgba(40,30,15,.04), 0 1px 1px rgba(40,30,15,.03);
+            --shadow-lg: 0 6px 20px rgba(40,30,15,.07);
             --radius:    14px;
         }
 
@@ -43,30 +59,34 @@
         /* Auto (système) */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
-                --green-lt:  #0d3326;
-                --earth-lt:  #2a1a0d;
-                --sky-lt:    #0d1e38;
+                --green-lt:  #0f3d2e;
+                --earth-lt:  #241f18;
+                --sky-lt:    #0c2440;
                 --amber-lt:  #2a1f00;
-                --bg:        #0f1a14;
-                --card:      #1a2620;
-                --text:      #e8f5f0;
-                --muted:     #7aaa96;
-                --border:    #2a4038;
-                --shadow:    0 4px 24px rgba(0,0,0,.35);
+                --bg:        #0f1611;
+                --card:      #19211b;
+                --text:      #f0ece3;
+                --muted:     #8aa395;
+                --border:    #28332b;
+                --hero-bg-1: #080d0a;
+                --hero-bg-2: #111a14;
+                --shadow:    0 4px 24px rgba(0,0,0,.4);
             }
         }
         /* Forcé manuellement */
         :root[data-theme="dark"] {
-            --green-lt:  #0d3326;
-            --earth-lt:  #2a1a0d;
-            --sky-lt:    #0d1e38;
+            --green-lt:  #0f3d2e;
+            --earth-lt:  #241f18;
+            --sky-lt:    #0c2440;
             --amber-lt:  #2a1f00;
-            --bg:        #0f1a14;
-            --card:      #1a2620;
-            --text:      #e8f5f0;
-            --muted:     #7aaa96;
-            --border:    #2a4038;
-            --shadow:    0 4px 24px rgba(0,0,0,.35);
+            --bg:        #0f1611;
+            --card:      #19211b;
+            --text:      #f0ece3;
+            --muted:     #8aa395;
+            --border:    #28332b;
+            --hero-bg-1: #080d0a;
+            --hero-bg-2: #111a14;
+            --shadow:    0 4px 24px rgba(0,0,0,.4);
         }
 
         /* ── DARK MODE OVERRIDES ────────────────────── */
@@ -149,8 +169,8 @@
             border-radius: 50px;
             padding: 6px 14px;
             cursor: pointer;
-            font-family: 'Nunito', sans-serif;
-            font-weight: 700; font-size: .82rem;
+            font-family: var(--font-main);
+            font-weight: 600; font-size: .82rem;
             color: rgba(255,255,255,.85);
             transition: all .25s;
             white-space: nowrap;
@@ -167,7 +187,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -175,7 +195,7 @@
 
         /* ── HERO ─────────────────────────────────── */
         .hero {
-            background: linear-gradient(135deg, #1a4a32 0%, #2d9e72 55%, #56c99a 100%);
+            background: linear-gradient(160deg, var(--hero-bg-1) 0%, var(--hero-bg-2) 100%);
             padding: 40px 24px 54px;
             position: relative;
             overflow: hidden;
@@ -184,7 +204,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200'%3E%3Cpolyline points='0,180 60,140 120,160 200,80 280,120 360,40 440,90 520,30 600,70 600,200 0,200' fill='rgba(255,255,255,0.04)'/%3E%3Cpolyline points='0,200 80,160 160,180 240,100 330,140 420,60 500,110 600,50 600,200' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E") bottom/cover no-repeat;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200' preserveAspectRatio='none'%3E%3Cpolyline points='0,180 60,140 120,160 200,80 280,120 360,40 440,90 520,30 600,70 600,200 0,200' fill='rgba(93,202,165,0.07)'/%3E%3Cpolyline points='0,180 60,140 120,160 200,80 280,120 360,40 440,90 520,30 600,70' fill='none' stroke='rgba(93,202,165,0.45)' stroke-width='1.5'/%3E%3C/svg%3E") bottom/100% 70% no-repeat;
         }
         .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; }
         .hero-top {
@@ -195,32 +215,33 @@
         .hero-logo svg { width: 44px; height: 44px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
         .blog-link {
             display: flex; align-items: center; gap: 7px;
-            background: rgba(255,255,255,.15);
-            color: #fff; text-decoration: none;
+            background: rgba(255,255,255,.08);
+            color: var(--hero-text); text-decoration: none;
             padding: 8px 16px; border-radius: 50px;
-            font-size: .85rem; font-weight: 700;
-            border: 1px solid rgba(255,255,255,.25);
+            font-size: .85rem; font-weight: 600;
+            border: 1px solid rgba(255,255,255,.14);
             transition: background .2s;
         }
-        .blog-link:hover { background: rgba(255,255,255,.25); }
+        .blog-link:hover { background: rgba(255,255,255,.16); }
 
         .hero-title {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(2rem, 6vw, 3.4rem);
-            color: #fff;
-            letter-spacing: 2px;
-            line-height: 1;
+            font-family: var(--font-display);
+            font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+            font-weight: 700;
+            color: var(--hero-text);
+            letter-spacing: -0.5px;
+            line-height: 1.05;
             margin-top: 22px;
             cursor: pointer;
             transition: opacity .2s;
         }
         .hero-title:hover { opacity: .85; }
-        .hero-title span { color: #a8f0d0; }
+        .hero-title span { color: var(--hero-accent); }
         .hero-sub {
-            color: rgba(255,255,255,.75);
-            font-style: italic;
-            font-size: .95rem;
-            margin-top: 6px;
+            color: var(--hero-muted);
+            font-size: .92rem;
+            margin-top: 8px;
+            opacity: .85;
         }
 
         /* ── STAT CARDS ───────────────────────────── */
@@ -277,7 +298,7 @@
         .stat-icon.count  { background: #f0f0ff; }
         .stat-icon.speed  { background: #fff0f8; }
         .stat-label { font-size: .78rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
-        .stat-value { font-family: 'JetBrains Mono', 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; font-weight: 700; }
+        .stat-value { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 0; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; font-weight: 700; }
         .stat-sub { font-size: .78rem; color: var(--muted); }
 
         /* ── MAIN LAYOUT ──────────────────────────── */
@@ -293,7 +314,7 @@
             margin-bottom: 28px;
         }
         .form-card h2 {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.5rem; letter-spacing: 1.5px;
             color: var(--green); margin-bottom: 20px;
             display: flex; align-items: center; gap: 8px;
@@ -310,7 +331,7 @@
             border: 1.5px solid var(--border);
             border-radius: 9px;
             font-size: .95rem;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             background: var(--bg);
             color: var(--text);
             transition: border-color .2s, box-shadow .2s;
@@ -342,7 +363,7 @@
             color: white; border: none;
             padding: 13px 28px; border-radius: 10px;
             cursor: pointer; font-weight: 800;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             font-size: 1rem;
             transition: all .2s;
             display: flex; align-items: center; gap: 8px;
@@ -360,7 +381,7 @@
             border: none; border-radius: 8px;
             padding: 9px 16px; font-size: .9rem; font-weight: 700;
             color: #7a4f00; cursor: pointer; width: 100%;
-            transition: all .2s; font-family: 'Nunito', sans-serif;
+            transition: all .2s; font-family: var(--font-main);
         }
         .btn-renfo-exo:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,140,0,.3); }
 
@@ -430,7 +451,7 @@
             border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px;
         }
         .table-header h2 {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.5rem; letter-spacing: 1.5px; color: var(--text);
         }
         .table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -440,7 +461,7 @@
             padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--border);
             background: var(--bg); color: var(--muted);
             font-weight: 700; font-size: .8rem; cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             display: flex; align-items: center; gap: 5px;
             transition: all .2s;
         }
@@ -496,7 +517,7 @@
             padding: 8px 18px; border-radius: 8px; border: none;
             background: linear-gradient(135deg, #e8a020, #c07800);
             color: #fff; font-weight: 800; font-size: .82rem;
-            cursor: pointer; font-family: 'Nunito', sans-serif;
+            cursor: pointer; font-family: var(--font-main);
             transition: all .2s;
         }
         .bb-btn-save:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,120,0,.3); }
@@ -505,7 +526,7 @@
             border: 1.5px solid #f0c060;
             background: transparent; color: #7a5200;
             font-weight: 700; font-size: .82rem;
-            cursor: pointer; font-family: 'Nunito', sans-serif;
+            cursor: pointer; font-family: var(--font-main);
             transition: all .2s;
         }
         .bb-btn-dismiss:hover { background: rgba(240,192,96,.2); }
@@ -552,7 +573,7 @@
             font-weight: 800;
             font-size: .82rem;
             cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             transition: all .2s;
             display: inline-flex;
             align-items: center;
@@ -617,7 +638,7 @@
             background: linear-gradient(135deg, var(--green), var(--green-dk));
             color: #fff;
             font-weight: 800; font-size: .85rem; cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             display: flex; align-items: center; gap: 6px;
             transition: all .2s;
             box-shadow: 0 3px 10px rgba(45,158,114,.3);
@@ -630,7 +651,7 @@
             background: var(--sky-lt);
             color: #1a4f9e;
             font-weight: 800; font-size: .85rem; cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             display: flex; align-items: center; gap: 6px;
             transition: all .2s;
         }
@@ -687,7 +708,7 @@
             display: flex; align-items: center; justify-content: space-between;
         }
         .modal-header h3 {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.4rem; letter-spacing: 1.5px; color: var(--text);
             display: flex; align-items: center; gap: 8px;
         }
@@ -713,7 +734,7 @@
         .modal-tab {
             flex: 1; padding: 9px; border-radius: 8px;
             border: none; background: transparent;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             font-weight: 700; font-size: .85rem;
             color: var(--muted); cursor: pointer;
             transition: all .2s;
@@ -745,7 +766,7 @@
             border: 1.5px solid var(--border);
             background: var(--bg); color: var(--muted);
             font-weight: 700; font-size: .9rem; cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             transition: all .2s;
         }
         .btn-cancel:hover { border-color: var(--red); color: var(--red); }
@@ -756,7 +777,7 @@
             background: linear-gradient(135deg, var(--green), var(--green-dk));
             color: #fff;
             font-weight: 800; font-size: .9rem; cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             display: flex; align-items: center; gap: 8px;
             box-shadow: 0 4px 14px rgba(45,158,114,.3);
             transition: all .2s;
@@ -775,7 +796,7 @@
         .gpx-result-title { font-weight: 800; color: var(--green-dk); margin-bottom: 8px; font-size: .95rem; }
         .gpx-result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .gpx-result-item { text-align: center; }
-        .gpx-result-item .val { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--text); }
+        .gpx-result-item .val { font-family: var(--font-display); font-size: 1.3rem; color: var(--text); }
         .gpx-result-item .lbl { font-size: .72rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
 
         .gpx-skipped {
@@ -878,7 +899,7 @@
             margin-bottom: 28px;
         }
         .recap-card h2 {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.5rem; letter-spacing: 1.5px;
             margin-bottom: 20px;
             display: flex; align-items: center; gap: 8px;
@@ -895,7 +916,7 @@
             padding: 16px 18px;
         }
         .recap-item-label { font-size: .78rem; opacity: .7; text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
-        .recap-item-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; line-height: 1; margin: 4px 0 2px; }
+        .recap-item-value { font-family: var(--font-display); font-size: 2rem; letter-spacing: 1px; line-height: 1; margin: 4px 0 2px; }
         .recap-item-sub { font-size: .8rem; opacity: .65; }
 
         /* ── RPE MOYENNE COLORÉE ───────────────────── */
@@ -909,7 +930,7 @@
             padding: 3px 10px; border-radius: 20px;
             margin-top: 5px; letter-spacing: .3px;
         }
-        .rpe-badge.green  { background: rgba(45,158,114,.3);  color: #a8f0d0; }
+        .rpe-badge.green  { background: rgba(45,158,114,.3);  color: var(--green-bright); }
         .rpe-badge.orange { background: rgba(232,160,32,.3);  color: #fde08a; }
         .rpe-badge.red    { background: rgba(224,82,82,.3);   color: #fdb0b0; }
 
@@ -926,7 +947,7 @@
             padding: 14px 18px;
             background: rgba(255,255,255,.08);
             border: none; cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             font-weight: 800; font-size: .88rem;
             color: rgba(255,255,255,.9);
             transition: background .2s;
@@ -968,7 +989,7 @@
 
         .rule8020-box {
             background: rgba(45,158,114,.15);
-            border-left: 3px solid #a8f0d0;
+            border-left: 3px solid var(--green-bright);
             border-radius: 0 8px 8px 0;
             padding: 12px 16px;
             font-size: .82rem;
@@ -976,7 +997,7 @@
             line-height: 1.7;
             margin-top: 14px;
         }
-        .rule8020-box strong { color: #a8f0d0; }
+        .rule8020-box strong { color: var(--green-bright); }
         .rule8020-sources {
             font-size: .74rem; opacity: .6;
             margin-top: 8px; font-style: italic;
@@ -1051,7 +1072,7 @@
         }
         .video-progress-fill {
             height: 100%; border-radius: 3px;
-            background: linear-gradient(90deg, var(--green), #a8f0d0);
+            background: linear-gradient(90deg, var(--green), var(--green-bright));
             width: 0%;
         }
         .video-status {
@@ -1065,7 +1086,7 @@
             padding: 11px 24px; border-radius: 9px; border: none;
             background: linear-gradient(135deg, #c0152a, #e05252);
             color: #fff; font-weight: 800; font-size: .9rem;
-            cursor: pointer; font-family: 'Nunito', sans-serif;
+            cursor: pointer; font-family: var(--font-main);
             display: flex; align-items: center; gap: 8px;
             box-shadow: 0 4px 14px rgba(224,82,82,.35);
             transition: all .2s;
@@ -1082,8 +1103,8 @@
 
         /* ── TRAIL OBJECTIF ────────────────────────── */
         .trail-goal-bar {
-            background: rgba(255,255,255,.10);
-            border: 1.5px solid rgba(168,240,208,.35);
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(93,202,165,.22);
             border-radius: 14px;
             margin-top: 22px;
             padding: 16px 20px;
@@ -1092,24 +1113,24 @@
             cursor: pointer;
             transition: background .2s;
         }
-        .trail-goal-bar:hover { background: rgba(255,255,255,.16); }
+        .trail-goal-bar:hover { background: rgba(255,255,255,.09); }
         .trail-goal-bar.has-goal { cursor: default; }
-        .trail-goal-bar.has-goal:hover { background: rgba(255,255,255,.10); }
+        .trail-goal-bar.has-goal:hover { background: rgba(255,255,255,.05); }
 
         .tg-icon { font-size: 1.6rem; flex-shrink: 0; }
 
         .tg-content { flex: 1; min-width: 0; }
         .tg-label {
-            font-size: .72rem; font-weight: 700;
+            font-size: .72rem; font-weight: 600;
             text-transform: uppercase; letter-spacing: .6px;
-            color: rgba(168,240,208,.8); margin-bottom: 3px;
+            color: var(--hero-muted); margin-bottom: 3px;
         }
         .tg-name {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.4rem; letter-spacing: 1px; color: #fff;
-            line-height: 1.1;
+            font-family: var(--font-display);
+            font-size: 1.2rem; font-weight: 700; letter-spacing: -0.3px; color: var(--hero-text);
+            line-height: 1.15;
         }
-        .tg-name a { color: #a8f0d0; text-decoration: none; }
+        .tg-name a { color: var(--green-bright); text-decoration: none; }
         .tg-name a:hover { text-decoration: underline; }
         .tg-stats {
             font-size: .82rem; color: rgba(255,255,255,.70);
@@ -1119,10 +1140,10 @@
 
         .tg-edit-btn {
             background: rgba(255,255,255,.15);
-            color: #a8f0d0; border: 1px solid rgba(168,240,208,.3);
+            color: var(--green-bright); border: 1px solid rgba(168,240,208,.3);
             border-radius: 8px; padding: 7px 14px;
             font-size: .8rem; font-weight: 700;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             cursor: pointer; transition: all .2s; flex-shrink: 0;
             white-space: nowrap;
         }
@@ -1152,7 +1173,7 @@
         .rb-icon { font-size: 2rem; flex-shrink: 0; margin-top: 2px; }
         .rb-body  { flex: 1; min-width: 0; }
         .rb-title {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.3rem; letter-spacing: 1px; color: #fff;
             margin-bottom: 4px;
         }
@@ -1174,7 +1195,7 @@
             display: flex; flex-direction: column; gap: 2px;
         }
         .rb-crit-label { font-size: .72rem; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .4px; font-weight: 700; }
-        .rb-crit-value { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: #fff; }
+        .rb-crit-value { font-family: var(--font-display); font-size: 1.2rem; color: #fff; }
         .rb-crit-target { font-size: .72rem; color: rgba(255,255,255,.45); }
         .rb-crit-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
         .rb-crit-dot.green  { background: #2d9e72; }
@@ -1198,7 +1219,7 @@
         }
         .coach-header-text { flex: 1; }
         .coach-header-title {
-            font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+            font-family: var(--font-display); font-size: 1.1rem;
             letter-spacing: 1px; color: var(--text); margin-bottom: 2px;
         }
         .coach-header-sub { font-size: .78rem; color: var(--muted); line-height: 1.4; }
@@ -1226,13 +1247,13 @@
             background: linear-gradient(135deg, var(--green-dk), var(--green));
             color: #fff; border: none; border-radius: 10px;
             font-size: .9rem; font-weight: 700; cursor: pointer;
-            font-family: 'Nunito', sans-serif; transition: opacity .2s;
+            font-family: var(--font-main); transition: opacity .2s;
         }
         .btn-coach-activate:hover { opacity: .88; }
         .btn-coach-dismiss {
             padding: 12px 16px; background: transparent; color: var(--muted);
             border: 1px solid var(--border); border-radius: 10px;
-            font-size: .82rem; cursor: pointer; font-family: 'Nunito', sans-serif;
+            font-size: .82rem; cursor: pointer; font-family: var(--font-main);
         }
         .coach-api-input-wrap {
             padding: 14px 22px; border-top: 1px solid var(--border); background: var(--bg);
@@ -1247,7 +1268,7 @@
         .btn-coach-save-key {
             padding: 9px 14px; background: var(--green); color: #fff;
             border: none; border-radius: 8px; font-size: .82rem;
-            font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif;
+            font-weight: 700; cursor: pointer; font-family: var(--font-main);
         }
         .coach-loading {
             padding: 28px 22px; display: flex; flex-direction: column;
@@ -1316,7 +1337,7 @@
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 14px; border-radius: 9px;
             font-size: .8rem; font-weight: 700; cursor: pointer;
-            font-family: 'Nunito', sans-serif; border: 1px solid var(--border);
+            font-family: var(--font-main); border: 1px solid var(--border);
             transition: all .15s;
         }
         .btn-coach-print {
@@ -1328,7 +1349,7 @@
         }
         .btn-coach-copy:hover { background: #dbeafe; }
         [data-theme="dark"] .btn-coach-print {
-            background: rgba(45,158,114,.12); color: #a8f0d0; border-color: rgba(45,158,114,.3);
+            background: rgba(45,158,114,.12); color: var(--green-bright); border-color: rgba(45,158,114,.3);
         }
         [data-theme="dark"] .btn-coach-copy {
             background: rgba(59,130,246,.12); color: #93c5fd; border-color: rgba(59,130,246,.3);
@@ -1339,7 +1360,7 @@
             padding: 6px 10px; border-radius: 8px;
             border: 1px solid var(--border); background: var(--bg);
             color: var(--text); font-size: .78rem; font-weight: 700;
-            cursor: pointer; font-family: 'Nunito', sans-serif;
+            cursor: pointer; font-family: var(--font-main);
         }
 
         .coach-footer {
@@ -1351,12 +1372,12 @@
         .btn-coach-refresh {
             padding: 8px 16px; background: var(--green-lt); color: var(--green);
             border: 1px solid var(--green); border-radius: 8px;
-            font-size: .8rem; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif;
+            font-size: .8rem; font-weight: 700; cursor: pointer; font-family: var(--font-main);
         }
         .btn-coach-deactivate {
             padding: 8px 12px; background: transparent; color: var(--muted);
             border: 1px solid var(--border); border-radius: 8px;
-            font-size: .75rem; cursor: pointer; font-family: 'Nunito', sans-serif;
+            font-size: .75rem; cursor: pointer; font-family: var(--font-main);
         }
 
         /* ── FORM VALIDATION ───────────────────────── */
@@ -1433,7 +1454,7 @@
             text-decoration: none;
             color: #7a5200;
             font-size: .82rem; font-weight: 700;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             transition: background .15s;
         }
         .renfo-hint-link:hover {
@@ -1475,7 +1496,7 @@
             border: 1.5px solid var(--border);
             border-radius: 8px;
             font-size: .82rem;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             font-weight: 700;
             background: var(--card);
             color: var(--text);
@@ -1503,7 +1524,7 @@
             border: 1.5px solid var(--border);
             background: transparent; color: var(--muted);
             font-size: .78rem; font-weight: 700;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             cursor: pointer; transition: all .2s;
             white-space: nowrap;
         }
@@ -1534,7 +1555,7 @@
             flex-wrap: wrap; margin-bottom: 20px;
         }
         .chart-title {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.4rem; letter-spacing: 1.5px;
             color: var(--text);
         }
@@ -1558,7 +1579,7 @@
         .chart-tab {
             padding: 6px 12px; border-radius: 6px;
             border: none; background: transparent;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--font-main);
             font-weight: 700; font-size: .78rem;
             color: var(--muted); cursor: pointer;
             transition: all .2s;
@@ -1597,8 +1618,8 @@
 		
 		/* ── POIDS & WATTS ─────────────────────────────── */
 .weight-box {
-    background: rgba(255,255,255,.12);
-    border: 1.5px solid rgba(168,240,208,.35);
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(93,202,165,.22);
     border-radius: 12px;
     padding: 14px 18px;
     margin-bottom: 18px;
@@ -1607,20 +1628,23 @@
     gap: 12px;
 }
 .weight-box label {
-    font-size: .78rem;
-    color: rgba(168,240,208,.85);
-    font-weight: 700;
+    font-size: .72rem;
+    color: var(--hero-muted);
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: .4px;
 }
 .weight-box input, .weight-box select {
-    background: rgba(255,255,255,.15);
-    border: 1.5px solid rgba(255,255,255,.25);
-    color: #fff;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.16);
+    color: var(--hero-text);
     border-radius: 8px;
     padding: 8px 12px;
     font-size: .95rem;
 }
+.weight-box input::placeholder { color: rgba(159,225,203,.45); }
+.weight-box small { color: var(--hero-muted); opacity: .8; font-size: .72rem; }
+.weight-box small span { color: var(--hero-accent); font-weight: 600; }
 [data-theme="dark"] .weight-box {
     background: rgba(0,0,0,.25);
     border-color: rgba(168,240,208,.25);
@@ -1639,7 +1663,7 @@ th.watts-col, td.watts-col {
     white-space: nowrap;
 }
 .watts-value {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: var(--font-display);
     font-size: 1.05rem;
     font-weight: 800;
     color: #00ab87;
@@ -1740,7 +1764,7 @@ th.effort-col, td.effort-col {
 }
 [data-theme="dark"] .detail-btn {
     background: linear-gradient(135deg, #0f1a14, #1a4a32);
-    color: #a8f0d0;
+    color: var(--green-bright);
     border-color: #2d9e72;
 }
 
@@ -1816,7 +1840,7 @@ th.effort-col, td.effort-col {
             margin-bottom: 20px;
         }
         .week-view-title {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.15rem;
             letter-spacing: 1px;
             color: var(--green);
@@ -1895,7 +1919,7 @@ th.effort-col, td.effort-col {
             margin-bottom: 20px;
         }
         .charge-title {
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: var(--font-display);
             font-size: 1.1rem;
             letter-spacing: 1px;
             color: var(--green);
@@ -1965,12 +1989,12 @@ th.effort-col, td.effort-col {
         <div class="hero-top">
             <div class="hero-logo">
                 <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="22" cy="22" r="22" fill="rgba(255,255,255,.15)"/>
-                    <path d="M10 32 L18 18 L24 24 L30 14 L34 20" stroke="#a8f0d0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    <circle cx="30" cy="14" r="3" fill="#a8f0d0"/>
+                    <circle cx="22" cy="22" r="22" fill="rgba(93,202,165,.14)"/>
+                    <path d="M10 32 L18 18 L24 24 L30 14 L34 20" stroke="#5dcaa5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <circle cx="30" cy="14" r="3" fill="#5dcaa5"/>
                     <path d="M14 34 Q22 28 30 34" stroke="rgba(255,255,255,.5)" stroke-width="1.5" fill="none"/>
                 </svg>
-                <span style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#a8f0d0;letter-spacing:1px;">Run Nature</span>
+                <span style="font-family:var(--font-display);font-weight:700;font-size:1.15rem;color:var(--hero-accent);letter-spacing:-0.3px;">Run Nature</span>
             </div>
             <a href="https://www.run-nature.com/" target="_blank" class="blog-link">
                 🌿 Mon Blog Trail
@@ -1983,7 +2007,7 @@ th.effort-col, td.effort-col {
         </div>
         <h1 class="hero-title" id="title" onclick="editTitle()">
             Suivi <span>Préparation Trail</span>
-            <span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>
+            <span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>
         </h1>
         <p class="hero-sub">"Le succès est la somme de petits efforts répétés jour après jour."</p>
 		
@@ -2335,7 +2359,7 @@ th.effort-col, td.effort-col {
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong style="color:#a8f0d0">1–3</strong></td>
+                            <td><strong style="color:var(--green-bright)">1–3</strong></td>
                             <td>Très facile</td>
                             <td>Footing de récupération</td>
                         </tr>
@@ -2368,7 +2392,7 @@ th.effort-col, td.effort-col {
 
                 <!-- Légende couleurs -->
                 <div style="margin-top:14px;font-size:.8rem;color:rgba(255,255,255,.75);display:flex;flex-direction:column;gap:6px;">
-                    <div><span class="rpe-dot" style="background:#2d9e72"></span><strong style="color:#a8f0d0">RPE moyen 3–5</strong> — Bonne répartition EF, tu respectes la règle 80/20 🟢</div>
+                    <div><span class="rpe-dot" style="background:#2d9e72"></span><strong style="color:var(--green-bright)">RPE moyen 3–5</strong> — Bonne répartition EF, tu respectes la règle 80/20 🟢</div>
                     <div><span class="rpe-dot" style="background:#e8a020"></span><strong style="color:#fde08a">RPE moyen 5–6.5</strong> — Zone grise, attention à ne pas trop charger 🟡</div>
                     <div><span class="rpe-dot" style="background:#e05252"></span><strong style="color:#fdb0b0">RPE moyen &gt; 6.5</strong> — Trop intense, risque de surentraînement 🔴</div>
                 </div>
@@ -4046,7 +4070,7 @@ function importFullBackup(e) {
                 localStorage.setItem('customTrailTitle', backup.title);
                 const titleEl = document.getElementById('title');
                 if (titleEl) titleEl.innerHTML = backup.title +
-                    `<span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>`;
+                    `<span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>`;
             }
 
             // Restaurer l'objectif trail
@@ -4203,7 +4227,7 @@ function editTitle() {
     const newTitle = prompt('Nouveau titre :', current);
     if (newTitle && newTitle.trim()) {
         localStorage.setItem('customTrailTitle', newTitle.trim());
-        el.innerHTML = esc(newTitle.trim()) + `<span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>`;
+        el.innerHTML = esc(newTitle.trim()) + `<span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>`;
     }
 }
 
@@ -4213,7 +4237,7 @@ function editTitle() {
 function loadData() {
     const savedTitle = localStorage.getItem('customTrailTitle');
     if (savedTitle) {
-        document.getElementById('title').innerHTML = esc(savedTitle) + `<span style="font-size:.4em;opacity:.6;display:block;font-family:'Nunito',sans-serif;font-weight:600;letter-spacing:0;margin-top:4px;">✏️ Cliquer pour modifier le titre</span>`;
+        document.getElementById('title').innerHTML = esc(savedTitle) + `<span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>`;
     }
     initTheme();
     renderGoalBar();
