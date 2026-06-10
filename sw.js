@@ -1,4 +1,4 @@
-const CACHE = 'srn-dashboard-trail-v33';
+const CACHE = 'srn-dashboard-trail-v34';
 const FILES = [
   '/dashboard-suivi-trail/',
   '/dashboard-suivi-trail/index.html',
@@ -30,9 +30,50 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+  // On ne gère que les GET (les POST vers l'API Anthropic passent directement)
+  if (e.request.method !== 'GET') return;
+
+  // HTML / navigation : NETWORK-FIRST
+  // → les mises à jour de l'app arrivent immédiatement, sans bump de version,
+  //   et le cache sert de filet de sécurité hors ligne.
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request)
+        .then(function(response) {
+          const copy = response.clone();
+          caches.open(CACHE).then(function(cache) { cache.put(e.request, copy); });
+          return response;
+        })
+        .catch(function() {
+          return caches.match(e.request).then(function(cached) {
+            return cached || caches.match('/dashboard-suivi-trail/index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Assets (icônes, manifest, polices...) : CACHE-FIRST avec mise en cache au vol
   e.respondWith(
-    caches.match(e.request).then(function(response) {
-      return response || fetch(e.request);
+    caches.match(e.request).then(function(cached) {
+      if (cached) return cached;
+      return fetch(e.request).then(function(response) {
+        // Mettre en cache les réponses valides du même domaine + Google Fonts
+        // (pour que les polices fonctionnent hors ligne)
+        const url = e.request.url;
+        const cacheable = response.ok && (
+          url.startsWith(self.location.origin) ||
+          url.includes('fonts.googleapis.com') ||
+          url.includes('fonts.gstatic.com')
+        );
+        if (cacheable) {
+          const copy = response.clone();
+          caches.open(CACHE).then(function(cache) { cache.put(e.request, copy); });
+        }
+        return response;
+      }).catch(function() {
+        return cached; // undefined si vraiment rien — le navigateur affichera son erreur
+      });
     })
   );
 });
