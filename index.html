@@ -210,29 +210,24 @@
             padding: 40px 24px 54px;
             position: relative;
             overflow: hidden;
+            /* Forcer un contexte de composition GPU propre — évite le glitch
+               de lignes horizontales sur Android (Realme/ColorOS/Chrome) */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            isolation: isolate;
         }
-        /* Massif en couches — ancré au bas, derrière le contenu */
-        .hero::before, .hero::after {
-            content: '';
+        /* Massif en couches via SVG inline dans le DOM (plus stable qu'un
+           background-image SVG en base64 sur Android) — voir .hero-mountain */
+        .hero::before, .hero::after { display: none; }
+        .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 2; }
+        .hero-mountain {
             position: absolute;
             left: 0; right: 0; bottom: 0;
+            width: 100%; height: auto;
             pointer-events: none;
-            background-repeat: no-repeat;
-            background-position: bottom;
-            background-size: 100% 100%;
+            display: block;
+            line-height: 0;
         }
-        /* Couche arrière (massif lointain, plus clair) */
-        .hero::before {
-            height: 46%;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='300' viewBox='0 0 1200 300' preserveAspectRatio='none'%3E%3Cpath d='M0,210 L210,120 L390,170 L630,70 L840,140 L1020,90 L1200,150 L1200,300 L0,300 Z' fill='%2322372b'/%3E%3Cpath d='M0,210 L210,120 L390,170 L630,70 L840,140 L1020,90 L1200,150' fill='none' stroke='rgba(93,202,165,0.5)' stroke-width='2'/%3E%3C/svg%3E");
-            opacity: .8;
-        }
-        /* Couche avant (massif proche, plus foncé) */
-        .hero::after {
-            height: 30%;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='200' viewBox='0 0 1200 200' preserveAspectRatio='none'%3E%3Cpath d='M0,160 L180,110 L420,145 L660,95 L900,135 L1080,105 L1200,140 L1200,200 L0,200 Z' fill='%231a2a21'/%3E%3C/svg%3E");
-        }
-        .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 2; }
         .hero-top {
             display: flex; align-items: center; justify-content: space-between;
             gap: 12px; flex-wrap: wrap;
@@ -1159,9 +1154,7 @@
 
         /* ── TRAIL OBJECTIF ────────────────────────── */
         .trail-goal-bar {
-            background: rgba(20,31,25,.72);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(14,22,17,.88);
             border: 1px solid rgba(93,202,165,.22);
             border-radius: 14px;
             margin-top: 22px;
@@ -1678,9 +1671,7 @@
 		
 		/* ── POIDS & WATTS ─────────────────────────────── */
 .weight-box {
-    background: rgba(20,31,25,.72);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(14,22,17,.88);
     border: 1px solid rgba(93,202,165,.22);
     border-radius: 12px;
     padding: 14px 18px;
@@ -2092,6 +2083,14 @@ th.effort-col, td.effort-col {
 
 <!-- ── HERO ─────────────────────────────────────── -->
 <div class="hero">
+    <!-- Massif en couches — SVG inline pour stabilité Android (pas de backdrop-filter ni de pseudo-éléments) -->
+    <svg class="hero-mountain" viewBox="0 0 1200 220" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">
+        <!-- Couche arrière : massif lointain -->
+        <path d="M0,160 L210,85 L390,125 L630,40 L840,100 L1020,58 L1200,105 L1200,220 L0,220 Z" fill="#22372b" opacity=".85"/>
+        <path d="M0,160 L210,85 L390,125 L630,40 L840,100 L1020,58 L1200,105" fill="none" stroke="rgba(93,202,165,0.5)" stroke-width="2"/>
+        <!-- Couche avant : premier plan plus foncé -->
+        <path d="M0,185 L180,148 L420,170 L660,125 L900,160 L1080,138 L1200,162 L1200,220 L0,220 Z" fill="#1a2a21"/>
+    </svg>
     <div class="hero-inner">
         <div class="hero-top">
             <div class="hero-logo">
