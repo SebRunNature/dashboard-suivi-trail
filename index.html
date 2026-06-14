@@ -4557,10 +4557,8 @@ function buildStats(entry, isCourse, durFmt, speedObj, dplus, bpm, rpe, mins, h,
     if (kcal !== null && kcal > 0) {
         stats.push({ value: String(kcal), label: 'Calories', unit: 'kcal' });
     }
-    // RPE always last
-    if (rpe > 0) stats.push({ value: String(rpe), label: 'RPE', unit: '/10' });
-    // Max 5 stats to keep it clean
-    return stats.slice(0, 5);
+    // Max 4 stats to keep it clean
+    return stats.slice(0, 4);
 }
 
 /* ─── MAIN FRAME DRAW ─────────────────────────── */
@@ -4756,7 +4754,25 @@ function drawVideoFrame(entry, progress, alpha) {
     const statPhaseStart = 0.52;
     const statStagger    = 0.09; // each stat delayed
 
-    const colW = Math.floor((W - 104) / Math.max(stats.length, 1));
+    // ── Taille de police adaptative selon le nombre de stats ──
+    const n = Math.max(stats.length, 1);
+    // Espace disponible total (marge 52px de chaque côté)
+    const totalW = W - 104;
+    // Police value : réduit progressivement si beaucoup de stats
+    const valueFontSize = n <= 3 ? 72 : n === 4 ? 58 : 48;
+    const labelFontSize = n <= 3 ? 26 : n === 4 ? 22 : 19;
+    const unitFontSize  = n <= 3 ? 24 : n === 4 ? 20 : 17;
+    const valueFont = `bold ${valueFontSize}px Bebas Neue, Arial Black, sans-serif`;
+    const labelFont = `600 ${labelFontSize}px Nunito, Arial, sans-serif`;
+    const unitFont  = `600 ${unitFontSize}px Nunito, Arial, sans-serif`;
+    const valueLine = Math.round(valueFontSize * 1.05);
+
+    // Pré-mesure chaque colonne pour éviter tout chevauchement
+    ctx.font = valueFont;
+    const colWidths = stats.map(s => Math.max(ctx.measureText(s.value).width + (s.unit ? ctx.measureText(' ' + s.unit).width + 6 : 0) + 32, 140));
+    const totalNatural = colWidths.reduce((a, b) => a + b, 0);
+    // Si les colonnes naturelles dépassent l'espace, on les répartit uniformément
+    const colW = totalNatural > totalW ? Math.floor(totalW / n) : null;
     const rowY = H - 190;
 
     stats.forEach((stat, i) => {
@@ -4768,7 +4784,12 @@ function drawVideoFrame(entry, progress, alpha) {
         const slideY  = (1 - easedT) * 40;
         const statAlpha = Math.min(1, statT * 2);
 
-        const cx = 52 + i * colW;
+        // Position X : somme des largeurs précédentes ou répartition uniforme
+        const cx = 52 + (colW !== null
+            ? i * colW
+            : colWidths.slice(0, i).reduce((a, b) => a + b, 0));
+        const innerPad = i > 0 ? 16 : 0;
+
         ctx.save();
         ctx.globalAlpha = alpha * statAlpha;
         ctx.translate(0, slideY);
@@ -4776,26 +4797,29 @@ function drawVideoFrame(entry, progress, alpha) {
         // Separator
         if (i > 0) {
             ctx.beginPath();
-            ctx.moveTo(cx, rowY - 10); ctx.lineTo(cx, rowY + 120);
+            ctx.moveTo(cx, rowY - 10); ctx.lineTo(cx, rowY + valueLine + labelFontSize + 20);
             ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.stroke();
         }
 
+        // Value
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold 72px Bebas Neue, Arial Black, sans-serif`;
+        ctx.font = valueFont;
         ctx.textBaseline = 'top'; ctx.textAlign = 'left';
-        ctx.fillText(stat.value, cx + (i > 0 ? 16 : 0), rowY);
+        const vW = ctx.measureText(stat.value).width;
+        ctx.fillText(stat.value, cx + innerPad, rowY);
 
-        ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        ctx.font = '600 26px Nunito, Arial, sans-serif';
-        ctx.fillText(stat.label, cx + (i > 0 ? 16 : 0), rowY + 78);
-
+        // Unit (à droite de la valeur, aligné en haut)
         if (stat.unit) {
-            ctx.font = `bold 72px Bebas Neue, Arial Black, sans-serif`;
-            const vW = ctx.measureText(stat.value).width;
-            ctx.font = '600 24px Nunito, Arial, sans-serif';
+            ctx.font = unitFont;
             ctx.fillStyle = 'rgba(255,255,255,0.60)';
-            ctx.fillText(stat.unit, cx + (i > 0 ? 16 : 0) + vW + 4, rowY + 8);
+            ctx.fillText(stat.unit, cx + innerPad + vW + 4, rowY + 8);
         }
+
+        // Label (en dessous de la valeur)
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = labelFont;
+        ctx.fillText(stat.label, cx + innerPad, rowY + valueLine);
+
         ctx.restore();
     });
 
