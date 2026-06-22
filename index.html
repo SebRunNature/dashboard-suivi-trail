@@ -5264,7 +5264,11 @@ function buildCoachContext() {
 
         entries.filter(e => { const d=new Date(e.date); return d>=wStart && d<=wEnd; })
                .forEach(e => {
-                   if (['Course','Trail'].includes(e.type)) { km+=Number(e.km)||0; dp+=Number(e.dplus)||0; }
+                   // Point G : inclure Tapis de course dans les km/D+ spécifiques course
+                   if (['Course','Trail','Tapis de course'].includes(e.type)) {
+                       km += Number(e.km)||0;
+                       dp += Number(e.dplus)||0;
+                   }
                    mins += Number(e.minutes)||0;
                    if (e.rpe) {
                        const rpeV = Number(e.rpe);
@@ -5273,7 +5277,7 @@ function buildCoachContext() {
                        else if (rpeV >= 7) hardCount++;
                    }
                    if (!types.includes(e.type)) types.push(e.type);
-                   // Kcal cumulés sur la semaine (utilise la formule Keytel via getKcalForEntry)
+                   // Kcal cumulés sur la semaine
                    const kcal = (typeof getKcalForEntry === 'function') ? getKcalForEntry(e) : null;
                    if (kcal !== null && kcal > 0) kcalTotal += kcal;
                });
@@ -5302,12 +5306,43 @@ function buildCoachContext() {
     const prevMonday = new Date(monday); prevMonday.setDate(monday.getDate()-7);
     const prevSunday = new Date(monday); prevSunday.setDate(monday.getDate()-1); prevSunday.setHours(23,59,59);
     let currKm=0, prevKm=0;
+    // Point F — charge globale équivalente CAP (cross-training inclus)
+    let currKmEqCAP=0, prevKmEqCAP=0;
     entries.forEach(e => {
         const d=new Date(e.date);
-        if (d>=monday) currKm+=Number(e.km)||0;
-        if (d>=prevMonday && d<=prevSunday) prevKm+=Number(e.km)||0;
+        const km_e   = Number(e.km)||0;
+        const mins_e = Number(e.minutes)||0;
+        const typ    = e.type || '';
+        // Équivalent CAP : course/tapis = 100%, vélo HT ÷ 2.4, rameur estimé via durée
+        let eqCAP = 0;
+        if (['Course','Trail','Tapis de course'].includes(typ)) {
+            eqCAP = km_e;
+        } else if (typ === 'Vélo Home Trainer') {
+            // On utilise les km enregistrés si présents, sinon estimation via vitesse*durée
+            const kmHT = km_e > 0 ? km_e : (Number(e.speedKmh)||0) * (mins_e/60);
+            eqCAP = kmHT / 2.4;
+        } else if (typ === 'Rameur') {
+            // Rameur : ~60% de l'impact cardiovasculaire du vélo → ÷4 comme proxy conservateur
+            eqCAP = (Number(e.speedKmh)||0) * (mins_e/60) / 4;
+        }
+        if (d>=monday)                     { currKm += ['Course','Trail','Tapis de course'].includes(typ) ? km_e : 0; currKmEqCAP += eqCAP; }
+        if (d>=prevMonday && d<=prevSunday) { prevKm += ['Course','Trail','Tapis de course'].includes(typ) ? km_e : 0; prevKmEqCAP += eqCAP; }
     });
-    const chargeRatio = prevKm > 0 ? +(currKm/prevKm).toFixed(2) : null;
+    const chargeRatio    = prevKm      > 0 ? +(currKm/prevKm).toFixed(2)           : null;
+    const chargeRatioEq  = prevKmEqCAP > 0 ? +(currKmEqCAP/prevKmEqCAP).toFixed(2) : null;
+
+    // Point E — détection journées multiples et séances intenses récentes (7 derniers jours)
+    const sept = new Date(now); sept.setDate(now.getDate()-7);
+    const seancesByDay = {};
+    let rpeLourdsRecents = 0;
+    entries.forEach(e => {
+        const d = new Date(e.date);
+        if (d >= sept) {
+            seancesByDay[e.date] = (seancesByDay[e.date]||0)+1;
+            if (Number(e.rpe) >= 8) rpeLourdsRecents++;
+        }
+    });
+    const joursTriples = Object.values(seancesByDay).filter(n => n >= 3).length;
 
     // Jours et semaines restants avant la course
     let daysLeft = null, weeksLeft = null;
@@ -5332,13 +5367,25 @@ function buildCoachContext() {
         objectif: goal ? {
             nom: goal.name || 'Non défini',
             distance: goal.dist ? goal.dist+'km' : '?',
+            distNum: Number(goal.dist) || 0,
             dplus: goal.dplus ? goal.dplus+'m' : 'non renseigné',
+            dplusNum: Number(goal.dplus) || 0,
             type: goal.goal || 'finisher',
             joursRestants: daysLeft,
             semainesRestantes: weeksLeft
         } : null,
         semaines: weeks,
-        chargeCetteSemaine: { km: Math.round(currKm), ratioVsPrecedente: chargeRatio },
+        chargeCetteSemaine: {
+            km: Math.round(currKm),
+            kmEqCAP: Math.round(currKmEqCAP),
+            ratioVsPrecedente: chargeRatio,
+            ratioEqCAPVsPrecedente: chargeRatioEq
+        },
+        // Point E
+        alerteFatigue: {
+            joursTriples,
+            rpeLourdsRecents
+        },
         totalSeances: entries.length,
         dateJour
     };
@@ -5348,60 +5395,99 @@ function buildCoachPrompt(ctx) {
     const u = ctx.utilisateur;
     const g = ctx.objectif;
 
-    // Profil athlète enrichi
+    // ── Point C : détecter si objectif ultra (≥100km ou D+≥4000m)
+    const isUltra = g && (g.distNum >= 100 || g.dplusNum >= 4000);
+
+    // ── Profil athlète
     const profilTxt = [
         `Sexe : ${u.genre === 'F' ? 'Femme' : 'Homme'}`,
-        u.age ? `Âge : ${u.age} ans` : null,
+        u.age  ? `Âge : ${u.age} ans`    : null,
         `Poids : ${u.poids}`,
-        u.taille ? `Taille : ${u.taille}` : null,
+        u.taille   ? `Taille : ${u.taille}`         : null,
         u.categorie ? `Catégorie FFA : ${u.categorie}` : null
     ].filter(Boolean).join(', ');
 
-    // Objectif enrichi avec semaines restantes
+    // ── Objectif
     const goalTxt = g
         ? `Objectif : ${g.nom} — ${g.distance}, D+ ${g.dplus}, type "${g.type}"${
             g.joursRestants !== null
                 ? ` — dans ${g.joursRestants} jours (≈ ${g.semainesRestantes} semaines)`
                 : ''
-          }.`
-        : `Pas d'objectif trail défini dans l'app — propose un plan généraliste.`;
+          }.${isUltra ? ` COURSE ULTRA : format continu longue distance.` : ''}`
+        : `Pas d'objectif trail défini — propose un plan généraliste progressif.`;
 
-    // Tableau des 4 dernières semaines avec polarisation et Kcal
+    // ── Tableau 4 semaines avec charge équivalente CAP
     const weeksTxt = ctx.semaines.map(w => {
         const polar = w.polarisation
             ? `, polarisation ${w.polarisation.facile}% facile / ${w.polarisation.intense}% intense`
             : '';
         const kcal = w.kcal ? `, ${w.kcal} kcal` : '';
-        const rpe = w.rpe ? `, RPE moy ${w.rpe}` : '';
-        return `  - Sem. ${w.sem} (${w.sem === 1 ? 'cette semaine' : 'il y a '+(w.sem-1)+' sem.'}) : ${w.km} km, D+ ${w.dp}m, ${w.h}h${rpe}${kcal}${polar}, types : ${w.types.join(', ')||'aucun'}`;
+        const rpe  = w.rpe  ? `, RPE moy ${w.rpe}` : '';
+        return `  - Sem. ${w.sem} (${w.sem === 1 ? 'cette semaine' : 'il y a '+(w.sem-1)+' sem.'}) : ${w.km} km trail/course, D+ ${w.dp}m, ${w.h}h total toutes disciplines${rpe}${kcal}${polar}, types : ${w.types.join(', ')||'aucun'}`;
     }).join('\n');
 
-    const chargeTxt = ctx.chargeCetteSemaine.ratioVsPrecedente !== null
-        ? `Charge semaine en cours : ${ctx.chargeCetteSemaine.km} km (ratio vs sem. précédente : ${Math.round(ctx.chargeCetteSemaine.ratioVsPrecedente*100)}%) — règle : >130% = pic risqué, <70% = décharge.`
-        : `Semaine en cours : ${ctx.chargeCetteSemaine.km} km (sem. précédente sans données pour comparer).`;
+    // ── Point D : seuils de charge adaptatifs selon le volume moyen réel
+    const kmMoyen = ctx.semaines.reduce((s,w) => s+w.km, 0) / Math.max(ctx.semaines.filter(w=>w.km>0).length,1);
+    const seuilHaut = kmMoyen >= 50 ? 120 : 130;  // gros volumes = seuil plus conservateur
+    const seuilBas  = kmMoyen >= 50 ?  60 :  70;
 
-    return `Tu es un coach trail expert, bienveillant et à jour sur les méthodes modernes (polarisation 80/20, charge progressive, périodisation, importance de la récupération). Tu analyses les données réelles d'un traileur et tu génères une réponse JSON structurée.
+    // ── Charge semaine en cours — trail seul + équivalent CAP global
+    const c = ctx.chargeCetteSemaine;
+    let chargeTxt = '';
+    if (c.ratioVsPrecedente !== null) {
+        chargeTxt = `Charge trail/course semaine en cours : ${c.km} km (ratio vs sem. précédente : ${Math.round(c.ratioVsPrecedente*100)}%) — seuils adaptés à ton volume : >${seuilHaut}% = pic risqué, <${seuilBas}% = décharge.`;
+        if (c.kmEqCAP > c.km) {
+            chargeTxt += `\nCharge globale équivalente CAP (trail + vélo HT ÷2.4 + tapis) : ${c.kmEqCAP} km-eq — ratio global : ${c.ratioEqCAPVsPrecedente !== null ? Math.round(c.ratioEqCAPVsPrecedente*100)+'%' : 'N/A'}. Le cross-training contribue réellement à la fatigue globale même sans impact articulaire.`;
+        }
+    } else {
+        chargeTxt = `Semaine en cours : ${c.km} km trail (sem. précédente sans données). Charge globale équivalente CAP : ${c.kmEqCAP} km-eq.`;
+    }
 
-CONTEXTE TEMPOREL :
-Date du jour : ${ctx.dateJour}
+    // ── Point E : alerte fatigue journées multiples et RPE élevés
+    const af = ctx.alerteFatigue;
+    let alerteFatigueTxt = '';
+    if (af.joursTriples > 0 || af.rpeLourdsRecents > 0) {
+        alerteFatigueTxt = `\nSIGNAUX DE FATIGUE (7 derniers jours) :`;
+        if (af.joursTriples > 0) alerteFatigueTxt += ` ${af.joursTriples} jour(s) avec 3 séances ou plus (cumul élevé).`;
+        if (af.rpeLourdsRecents > 0) alerteFatigueTxt += ` ${af.rpeLourdsRecents} séance(s) à RPE ≥ 8 (effort très intense).`;
+        alerteFatigueTxt += ` Tiens compte de ces signaux dans le plan.`;
+    }
 
-ATHLÈTE :
-${profilTxt}
+    // ── Point C : directives spécifiques ultra vs trail classique
+    const directivesObjectif = isUltra ? `
+CONTEXTE ULTRA (≥100km ou D+≥4000m) :
+- Intègre au moins 1 sortie longue par semaine avec D+ significatif (viser ~${g ? Math.round(g.dplusNum/12) : 600}m D+ minimum par semaine de build)
+- Travaille la marche rapide sur les montées (>10% de pente) : c'est une compétence technique ultra
+- Si l'objectif est à moins de 10 semaines : phase d'affûtage (réduction volume, maintien intensité)
+- Si l'objectif est à plus de 10 semaines : phase de build progressif, pas de décharge sauf signal clair
+- Mentionne explicitement la gestion nutritionnelle et hydrique sur les séances longues (>2h)
+- Volume D+ hebdomadaire cible en build : au moins ${g ? Math.round(g.dplusNum/8) : 1000}m D+/semaine pour être prêt` : `
+CONTEXTE TRAIL CLASSIQUE :
+- Progression prudente et régulière, priorité à la constance
+- Sorties longues mensuelles pour construire l'endurance de base
+- Volume D+ hebdomadaire adapté à la distance objectif`;
+
+    // ── Le prompt retourné ne contient QUE les données (le system est séparé dans l'appel API)
+    return `DONNÉES ATHLÈTE — ${ctx.dateJour}
+
+PROFIL : ${profilTxt}
 ${goalTxt}
-Total séances enregistrées dans l'app : ${ctx.totalSeances}
-${chargeTxt}
+Total séances enregistrées : ${ctx.totalSeances}
 
-4 DERNIÈRES SEMAINES (la sem. 1 = la plus récente, qui est en cours) :
+${chargeTxt}${alerteFatigueTxt}
+
+4 DERNIÈRES SEMAINES :
 ${weeksTxt}
+${directivesObjectif}
 
-INSTRUCTIONS D'ANALYSE :
-1. Identifie les points forts (volume cohérent, polarisation correcte, progression mesurée)
-2. Identifie les points d'attention (charge en pic, manque d'EF, RPE moyen trop haut, manque de variété)
-3. Si tu détectes un risque (surcharge >130%, 100% séances intenses, etc.), signale-le clairement
-4. Pour le plan, tiens compte de la phase actuelle vis-à-vis de l'objectif (préparation, affûtage, récupération)
-5. Si moins de 2 semaines de données : reste prudent et encourageant, ne propose pas de séances dures
+Analyse et génère le JSON demandé.`;
+}
 
-RÉPONDS UNIQUEMENT avec ce JSON valide (aucun texte avant ou après, pas de balise markdown) :
+// ── Prompt système fixe (séparé des données — Point A)
+function buildCoachSystemPrompt() {
+    return `Tu es un coach trail expert, bienveillant et à jour sur les méthodes modernes (polarisation 80/20, charge progressive, périodisation, importance de la récupération). Tu analyses les données réelles d'un traileur et tu génères UNE RÉPONSE JSON VALIDE UNIQUEMENT.
+
+STRUCTURE DE RÉPONSE OBLIGATOIRE (aucun texte avant ou après, pas de balise markdown) :
 {
   "analyse": [
     {"statut": "green|orange|red", "titre": "...", "sousTitre": "...", "corps": "..."},
@@ -5421,13 +5507,19 @@ RÉPONDS UNIQUEMENT avec ce JSON valide (aucun texte avant ou après, pas de bal
 }
 
 RÈGLES :
-- "analyse" : exactement 3 points, ordonnés du plus positif (haut) au plus préoccupant (bas)
-- "corps" de chaque point : 1-2 phrases concrètes, avec des données chiffrées tirées des semaines ci-dessus
-- "alerte" : null si rien à signaler, sinon une chaîne courte (ex: "⚠️ Charge en pic +45% — prévoir une semaine de décharge") quand un risque réel est détecté
-- "plan" : 7 jours obligatoires, séances réalistes calibrées sur le volume actuel (pas sur ce qui serait idéal dans l'absolu) et l'objectif
-- Couleurs plan : "#2d9e72" (course/trail/EF), "#e05252" (séance dure type fractionné/seuil), "#e8a020" (renfo/vélo/cross-training), "#3a7bd5" (cardio modéré), "#888" (repos)
-- Détail séance : précis et actionnable (ex: "45 min Z2, allure 5:30/km" plutôt que "endurance facile")
-- Tout en français, ton coach expert mais humain, tutoiement.`;
+- "analyse" : exactement 3 points, du plus positif (haut) au plus préoccupant (bas)
+- "corps" : 1-2 phrases concrètes avec données chiffrées tirées des semaines fournies
+- "alerte" : null si rien, sinon une chaîne courte (ex: "⚠️ Charge globale élevée — prévoir décharge") si risque réel
+- "plan" : 7 jours obligatoires, séances réalistes calibrées sur le volume réel (trail + cross-training), pas sur l'idéal théorique. Le plan doit refléter la charge globale équivalente CAP, pas seulement les km trail.
+- Couleurs plan : "#2d9e72" (course/trail/EF), "#e05252" (séance dure : fractionné/seuil), "#e8a020" (renfo/vélo/cross-training), "#3a7bd5" (cardio modéré), "#888" (repos)
+- Détail séance : précis et actionnable (ex: "45 min Z2, allure 5:30/km, D+300m" plutôt que "endurance facile")
+- Tout en français, ton coach expert mais humain, tutoiement.
+- INSTRUCTIONS D'ANALYSE :
+  1. Points forts : volume cohérent, polarisation correcte, progression mesurée, bonne utilisation du cross-training
+  2. Points d'attention : charge en pic (tenir compte du ratio adaptatif fourni), manque d'EF, RPE moyen trop haut, journées triples répétées
+  3. Risque détecté → alerte claire
+  4. Phase vis-à-vis de l'objectif : build, affûtage ou récupération ?
+  5. Si moins de 2 semaines de données : reste prudent, pas de séances dures`;
 }
 
 function renderCoachResult(data) {
@@ -5630,11 +5722,14 @@ async function runCoachAnalysis() {
     }, 1800);
 
     try {
-        const ctx    = buildCoachContext();
-        const prompt = buildCoachPrompt(ctx);
+        const ctx        = buildCoachContext();
+        const userPrompt = buildCoachPrompt(ctx);
+        const sysPrompt  = buildCoachSystemPrompt();
 
         // Modèle choisi par l'utilisateur (Haiku 4.5 par défaut)
         const chosenModel = localStorage.getItem('coachModel') || 'claude-haiku-4-5-20251001';
+        // Point B : max_tokens adaptatif — plus de tokens pour Sonnet (plans plus détaillés)
+        const maxTok = chosenModel.includes('sonnet') ? 2500 : 2000;
 
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -5646,8 +5741,9 @@ async function runCoachAnalysis() {
             },
             body: JSON.stringify({
                 model: chosenModel,
-                max_tokens: 2000,
-                messages: [{ role: 'user', content: prompt }]
+                max_tokens: maxTok,
+                system: sysPrompt,
+                messages: [{ role: 'user', content: userPrompt }]
             })
         });
 
