@@ -188,6 +188,202 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
+            display: flex;
+        }
+
+        /* ── SIDEBAR ──────────────────────────────── */
+        #sidebar {
+            width: 220px;
+            min-width: 220px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            background: #0c1410;
+            border-right: 1px solid rgba(93,202,165,.1);
+            z-index: 200;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        #sidebar .sb-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 22px 18px 18px;
+            border-bottom: 1px solid rgba(93,202,165,.1);
+            text-decoration: none;
+        }
+        #sidebar .sb-logo svg.sb-logo-icon {
+            width: 32px; height: 32px; flex-shrink: 0;
+        }
+        #sidebar .sb-logo-name {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: .95rem;
+            color: #5dcaa5;
+            letter-spacing: -.2px;
+            line-height: 1.1;
+        }
+        #sidebar .sb-logo-sub {
+            font-size: .6rem;
+            color: rgba(255,255,255,.35);
+            font-weight: 500;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        #sidebar .sb-group {
+            padding: 18px 10px 4px;
+        }
+        #sidebar .sb-group-label {
+            font-size: .6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: rgba(255,255,255,.3);
+            padding: 0 8px;
+            margin-bottom: 4px;
+        }
+
+        #sidebar .sb-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 9px;
+            color: rgba(255,255,255,.6);
+            font-size: .85rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .15s, color .15s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        #sidebar .sb-item:hover {
+            background: rgba(93,202,165,.08);
+            color: rgba(255,255,255,.9);
+        }
+        #sidebar .sb-item.active {
+            background: rgba(93,202,165,.13);
+            color: #5dcaa5;
+            font-weight: 600;
+        }
+        #sidebar .sb-item svg {
+            width: 16px; height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            flex-shrink: 0;
+            opacity: .8;
+        }
+        #sidebar .sb-item.active svg { opacity: 1; }
+
+        #sidebar .sb-divider {
+            height: 1px;
+            background: rgba(93,202,165,.08);
+            margin: 8px 10px;
+        }
+
+        #sidebar .sb-bottom {
+            margin-top: auto;
+            padding: 10px 10px 18px;
+            border-top: 1px solid rgba(93,202,165,.08);
+        }
+
+        /* Toggle dark mode dans la sidebar */
+        #sidebar .sb-theme-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 9px;
+            color: rgba(255,255,255,.5);
+            font-size: .85rem;
+            font-weight: 500;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            transition: background .15s, color .15s;
+        }
+        #sidebar .sb-theme-btn:hover {
+            background: rgba(93,202,165,.08);
+            color: rgba(255,255,255,.8);
+        }
+        #sidebar .sb-theme-btn svg {
+            width: 16px; height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        /* Zone principale à droite de la sidebar */
+        #main-content {
+            flex: 1;
+            min-width: 0;
+            overflow-x: hidden;
+        }
+
+        /* Burger mobile */
+        #sb-burger {
+            display: none;
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 500;
+            background: #0c1410;
+            border: 1px solid rgba(93,202,165,.2);
+            border-radius: 9px;
+            padding: 8px 10px;
+            cursor: pointer;
+            color: #5dcaa5;
+        }
+        #sb-burger svg {
+            width: 20px; height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            fill: none;
+            display: block;
+        }
+
+        /* Overlay mobile */
+        #sb-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 190;
+        }
+
+        /* Responsive : sidebar en drawer sur mobile */
+        @media (max-width: 768px) {
+            body { display: block; }
+            #sidebar {
+                position: fixed;
+                left: -240px;
+                top: 0;
+                height: 100%;
+                transition: left .25s cubic-bezier(.4,0,.2,1);
+                z-index: 300;
+            }
+            #sidebar.open {
+                left: 0;
+            }
+            #sb-burger { display: flex; align-items: center; justify-content: center; }
+            #sb-overlay.visible { display: block; }
+            #main-content { display: block; width: 100%; }
         }
 
         /* ── ICÔNES SVG (sprite Tabler) ── */
@@ -2037,6 +2233,88 @@ th.effort-col, td.effort-col {
 </style>
 </head>
 <body>
+
+<!-- ── BURGER MOBILE ──────────────────────────── -->
+<button id="sb-burger" onclick="sidebarOpen()" aria-label="Menu">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+
+<!-- ── OVERLAY MOBILE ─────────────────────────── -->
+<div id="sb-overlay" onclick="sidebarClose()"></div>
+
+<!-- ── SIDEBAR ────────────────────────────────── -->
+<nav id="sidebar" aria-label="Navigation principale">
+
+    <!-- Logo -->
+    <a href="https://www.run-nature.com/" target="_blank" class="sb-logo">
+        <svg class="sb-logo-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="22" r="22" fill="rgba(93,202,165,.14)"/>
+            <path d="M11 30 L19 17 L24 23 L29 13 L33 30 Z" fill="none" stroke="#5dcaa5" stroke-width="2.2" stroke-linejoin="round"/>
+            <circle cx="29" cy="13" r="2.4" fill="#5dcaa5"/>
+            <path d="M13 30 L31 30" stroke="rgba(159,225,203,.45)" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <div>
+            <div class="sb-logo-name">Run Nature</div>
+            <div class="sb-logo-sub">Dashboard Trail</div>
+        </div>
+    </a>
+
+    <!-- Navigation principale -->
+    <div class="sb-group">
+        <div class="sb-group-label">Entraînement</div>
+        <button class="sb-item active" onclick="sbScrollTo('statsRow'); sidebarClose()">
+            <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+            Tableau de bord
+        </button>
+        <button class="sb-item" onclick="sbScrollTo('seancesSection'); sidebarClose()">
+            <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M5 6v.01M5 12v.01M5 18v.01"/></svg>
+            Mes séances
+        </button>
+        <button class="sb-item" onclick="sbScrollTo('coachSection'); sidebarClose()">
+            <svg viewBox="0 0 24 24"><path d="M15.5 13a3.5 3.5 0 0 0-3.5 3.5v1a3.5 3.5 0 0 0 7 0v-1.8"/><path d="M8.5 13a3.5 3.5 0 0 1 3.5 3.5v1a3.5 3.5 0 0 1-7 0v-1.8"/><path d="M17.5 16a3.5 3.5 0 0 0 0-7h-.5"/><path d="M19 9.3v-1.8a3.5 3.5 0 0 0-7 0"/><path d="M6.5 16a3.5 3.5 0 0 1 0-7h.5"/><path d="M5 9.3v-1.8a3.5 3.5 0 0 1 7 0v9"/></svg>
+            Coach IA
+        </button>
+        <button class="sb-item" onclick="sbScrollTo('trailGoalBar'); sidebarClose()">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+            Mon objectif
+        </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- Ressources externes -->
+    <div class="sb-group">
+        <div class="sb-group-label">Ressources</div>
+        <a class="sb-item" href="https://run-nature.com/plan-norvegien-trail/" target="_blank">
+            <svg viewBox="0 0 24 24"><path d="M3 20l5-9 4 5 3-5 6 9z"/></svg>
+            Notre méthode
+        </a>
+        <a class="sb-item" href="https://www.run-nature.com/" target="_blank">
+            <svg viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>
+            Le blog
+        </a>
+        <a class="sb-item" href="https://run-nature.com/faq/" target="_blank">
+            <svg viewBox="0 0 24 24"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+            FAQ
+        </a>
+    </div>
+
+    <!-- Bas de sidebar -->
+    <div class="sb-bottom">
+        <button class="sb-theme-btn" id="sbThemeBtn" onclick="toggleTheme()">
+            <svg id="sbThemeIcon" viewBox="0 0 24 24"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/></svg>
+            <span id="sbThemeLabel">Mode sombre</span>
+        </button>
+        <button class="sb-item" onclick="showCoachOptIn(); sidebarClose()" style="margin-top:4px">
+            <svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15l8.15-8.15"/><path d="M16 5l3 3M14 7l3 3"/></svg>
+            Clé API Coach IA
+        </button>
+    </div>
+</nav>
+
+<!-- ── CONTENU PRINCIPAL ───────────────────────── -->
+<div id="main-content">
+
 <!-- Sprite icones Tabler (MIT) - hors ligne -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><defs>
 <g id="i-run"><path d="M5 17l5 -3l-.5 -3l2 1.5l1 -3.5"/><path d="M13.5 4.5l1 4.5l3 2"/><path d="M11.5 4.5a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/></g>
@@ -2102,10 +2380,10 @@ th.effort-col, td.effort-col {
                 </svg>
                 <span style="font-family:var(--font-display);font-weight:700;font-size:1.15rem;color:var(--hero-accent);letter-spacing:-0.3px;">Run Nature</span>
             </div>
-            <a href="https://www.run-nature.com/" target="_blank" class="blog-link">
+            <a href="https://www.run-nature.com/" target="_blank" class="blog-link" style="display:none">
                 <svg class="ic"><use href="#i-leaf"/></svg> Mon Blog Trail
             </a>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Basculer mode sombre / clair">  
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Basculer mode sombre / clair" style="display:none">  
 				<span class="tt-icon" id="themeIcon"><svg class="ic"><use href="#i-moon"/></svg></span>
                 <span class="tt-label" id="themeLabel">Mode sombre</span>
             </button>
@@ -6858,6 +7136,85 @@ if ('serviceWorker' in navigator) {
             .catch(function(err) { console.warn('SW échec :', err); });
     });
 }
+</script>
+
+<!-- ── FIN main-content ───────────────────────── -->
+</div><!-- /#main-content -->
+
+<script>
+/* ── SIDEBAR : scroll, open/close, sync icône thème ── */
+
+function sbScrollTo(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Décalage burger sur mobile
+    const offset = window.innerWidth <= 768 ? 56 : 0;
+    const top = el.getBoundingClientRect().top + window.scrollY - offset - 16;
+    window.scrollTo({ top, behavior: 'smooth' });
+    // Activer l'item cliqué
+    document.querySelectorAll('#sidebar .sb-item').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`#sidebar .sb-item[onclick*="${id}"]`);
+    if (btn) btn.classList.add('active');
+}
+
+function sidebarOpen() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sb-overlay').classList.add('visible');
+    document.body.style.overflow = 'hidden';
+}
+
+function sidebarClose() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sb-overlay').classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
+/* Synchroniser l'icône + label du bouton thème dans la sidebar */
+function syncSbTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+        || (!document.documentElement.getAttribute('data-theme')
+            && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const icon = document.getElementById('sbThemeIcon');
+    const label = document.getElementById('sbThemeLabel');
+    if (!icon || !label) return;
+    if (isDark) {
+        icon.innerHTML = '<circle cx="12" cy="12" r="4"/><path d="M3 12h1M20 12h1M12 3v1M12 20v1M5.6 5.6l.7.7M18.4 18.4l-.7-.7M5.6 18.4l.7-.7M18.4 5.6l-.7.7"/>';
+        label.textContent = 'Mode clair';
+    } else {
+        icon.innerHTML = '<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/>';
+        label.textContent = 'Mode sombre';
+    }
+}
+
+/* Hook sur toggleTheme existant pour syncer la sidebar */
+const _origToggleTheme = typeof toggleTheme === 'function' ? toggleTheme : null;
+if (_origToggleTheme) {
+    window.toggleTheme = function() {
+        _origToggleTheme();
+        setTimeout(syncSbTheme, 50);
+    };
+}
+
+/* Init au chargement */
+document.addEventListener('DOMContentLoaded', function() {
+    syncSbTheme();
+    /* Activer l'item selon la position scroll */
+    window.addEventListener('scroll', function() {
+        const sections = [
+            { id: 'statsRow',       btn: 'Tableau de bord' },
+            { id: 'seancesSection', btn: 'Mes séances' },
+            { id: 'coachSection',   btn: 'Coach IA' },
+        ];
+        let active = sections[0];
+        for (const s of sections) {
+            const el = document.getElementById(s.id);
+            if (el && el.getBoundingClientRect().top < 120) active = s;
+        }
+        document.querySelectorAll('#sidebar .sb-item').forEach(b => {
+            b.classList.toggle('active', b.textContent.trim() === active.btn);
+        });
+    }, { passive: true });
+});
 </script>
 
 </body>
