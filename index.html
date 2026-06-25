@@ -454,6 +454,12 @@
         }
         .hero-title:hover { opacity: .85; }
         .hero-title span { color: var(--hero-accent); }
+        .hero-champion {
+            font-style: italic;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--hero-accent);
+        }
         .hero-sub {
             color: var(--hero-muted);
             font-size: .92rem;
@@ -2285,13 +2291,21 @@ th.effort-col, td.effort-col {
     <!-- Ressources externes -->
     <div class="sb-group">
         <div class="sb-group-label">Ressources</div>
-        <a class="sb-item" href="https://run-nature.com/plan-norvegien-trail/" target="_blank">
+        <a class="sb-item" href="https://run-nature.com/2026/05/04/mon-dashboard-suivi-trail-loutil-pour-les-coureurs-qui-se-connaissent/" target="_blank">
             <svg viewBox="0 0 24 24"><path d="M3 20l5-9 4 5 3-5 6 9z"/></svg>
-            Notre méthode
+            Méthode utilisée
         </a>
         <a class="sb-item" href="https://www.run-nature.com/" target="_blank">
             <svg viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>
             Le blog
+        </a>
+        <a class="sb-item" href="https://www.run-nature.com/" target="_blank">
+            <svg viewBox="0 0 24 24"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+            RPE — c'est quoi ?
+        </a>
+        <a class="sb-item" href="https://www.run-nature.com/" target="_blank">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            EF — c'est quoi ?
         </a>
         <a class="sb-item" href="https://run-nature.com/faq/" target="_blank">
             <svg viewBox="0 0 24 24"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
@@ -2305,7 +2319,7 @@ th.effort-col, td.effort-col {
             <svg id="sbThemeIcon" viewBox="0 0 24 24"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/></svg>
             <span id="sbThemeLabel">Mode sombre</span>
         </button>
-        <button class="sb-item" onclick="showCoachOptIn(); sidebarClose()" style="margin-top:4px">
+        <button class="sb-item" onclick="sbScrollTo('coachSection'); setTimeout(showCoachOptIn, 400); sidebarClose()" style="margin-top:4px">
             <svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15l8.15-8.15"/><path d="M16 5l3 3M14 7l3 3"/></svg>
             Clé API Coach IA
         </button>
@@ -2371,15 +2385,6 @@ th.effort-col, td.effort-col {
     </svg>
     <div class="hero-inner">
         <div class="hero-top">
-            <div class="hero-logo">
-                <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="22" cy="22" r="22" fill="rgba(93,202,165,.14)"/>
-                    <path d="M11 30 L19 17 L24 23 L29 13 L33 30 Z" fill="none" stroke="#5dcaa5" stroke-width="2.2" stroke-linejoin="round"/>
-                    <circle cx="29" cy="13" r="2.4" fill="#5dcaa5"/>
-                    <path d="M13 30 L31 30" stroke="rgba(159,225,203,.45)" stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
-                <span style="font-family:var(--font-display);font-weight:700;font-size:1.15rem;color:var(--hero-accent);letter-spacing:-0.3px;">Run Nature</span>
-            </div>
             <a href="https://www.run-nature.com/" target="_blank" class="blog-link" style="display:none">
                 <svg class="ic"><use href="#i-leaf"/></svg> Mon Blog Trail
             </a>
@@ -2389,17 +2394,20 @@ th.effort-col, td.effort-col {
             </button>
 
         </div>
-        <h1 class="hero-title" id="title" onclick="editTitle()">
-            Suivi <span>Préparation Trail</span>
-            <span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>
+        <h1 class="hero-title" id="heroGreeting">
+            Hello <span id="heroChampionWord" class="hero-champion">champion</span>
         </h1>
         <p class="hero-sub">"Le succès est la somme de petits efforts répétés jour après jour."</p>
 		
 <!-- BOÎTE POIDS / TAILLE / GENRE / ÂGE -->
 <div class="weight-box" id="weightBox">
     <div class="form-group">
+        <label>Prénom</label>
+        <input type="text" id="userPrenom" placeholder="Ton prénom" maxlength="30" onchange="saveUserInfo(); updateGreeting()">
+    </div>
+    <div class="form-group">
         <label>Genre</label>
-        <select id="userGender" onchange="saveUserInfo()">
+        <select id="userGender" onchange="saveUserInfo(); updateGreeting()">
             <option value="H">Homme</option>
             <option value="F">Femme</option>
 			
@@ -6743,14 +6751,16 @@ function updateAgeCategory() {
 // Sauvegarde / chargement des infos utilisateur
 function saveUserInfo() {
     const gender = document.getElementById('userGender').value;
-	const age    = document.getElementById("userAge") ? document.getElementById("userAge").value : "";
+    const age    = document.getElementById("userAge") ? document.getElementById("userAge").value : "";
     const height = parseFloat(document.getElementById('userHeight').value) || 0;
     const weight = parseFloat(document.getElementById('userWeight').value) || 0;
-    
+    const prenom = (document.getElementById('userPrenom').value || '').trim();
+
     localStorage.setItem('userGender', gender);
-	localStorage.setItem("userAge", age);
+    localStorage.setItem("userAge", age);
     localStorage.setItem('userHeight', height);
     localStorage.setItem('userWeight', weight);
+    localStorage.setItem('userPrenom', prenom);
 }
 
 function loadUserInfo() {
@@ -6759,6 +6769,20 @@ function loadUserInfo() {
     document.getElementById('userWeight').value = localStorage.getItem('userWeight') || '';
     const ageEl = document.getElementById('userAge');
     if (ageEl) { ageEl.value = localStorage.getItem('userAge') || ''; updateAgeCategory(); }
+    const prenomEl = document.getElementById('userPrenom');
+    if (prenomEl) prenomEl.value = localStorage.getItem('userPrenom') || '';
+    updateGreeting();
+}
+
+function updateGreeting() {
+    const gender = localStorage.getItem('userGender') || document.getElementById('userGender')?.value || 'H';
+    const prenom = (localStorage.getItem('userPrenom') || document.getElementById('userPrenom')?.value || '').trim();
+    const mot    = gender === 'F' ? 'championne' : 'champion';
+    const word   = document.getElementById('heroChampionWord');
+    if (!word) return;
+    const greeting = document.getElementById('heroGreeting');
+    if (greeting) greeting.childNodes[0].textContent = 'Hello\u00a0';
+    word.textContent = prenom ? prenom : mot;
 }
 
 // Calcul watts pour Course et Trail
