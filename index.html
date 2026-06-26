@@ -55,7 +55,7 @@
             --radius:    14px;
         }
 
-        /* ── DARK MODE ─────────────────────────────── */
+        /* ── [CSS] DARK MODE ─────────────────────────────── */
         /* Auto (système) */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
@@ -89,7 +89,7 @@
             --shadow:    0 4px 24px rgba(0,0,0,.4);
         }
 
-        /* ── DARK MODE OVERRIDES ────────────────────── */
+        /* ── [CSS] DARK MODE OVERRIDES ────────────────────── */
         [data-theme="dark"] body { background: var(--bg); }
         @media (prefers-color-scheme: dark) { body { background: var(--bg); } }
 
@@ -158,7 +158,7 @@
         /* Footer */
         [data-theme="dark"] .footer { color: var(--muted); }
 
-        /* ── THEME TOGGLE BUTTON ────────────────────── */
+        /* ── [CSS] THEME TOGGLE BUTTON ────────────────────── */
         .theme-toggle {
             display: flex; align-items: center; gap: 6px;
             background: rgba(255,255,255,.12);
@@ -191,7 +191,7 @@
             display: flex;
         }
 
-        /* ── SIDEBAR ──────────────────────────────── */
+        /* ── [CSS] SIDEBAR ──────────────────────────────── */
         #sidebar {
             width: 220px;
             min-width: 220px;
@@ -386,7 +386,7 @@
             #main-content { display: block; width: 100%; }
         }
 
-        /* ── ICÔNES SVG (sprite Tabler) ── */
+        /* ── [CSS] ICÔNES SVG (sprite Tabler) ── */
         .ic {
             width: 1.1em; height: 1.1em;
             display: inline-block;
@@ -400,7 +400,7 @@
         }
         .ic-lg { width: 1.5em; height: 1.5em; }
 
-        /* ── HERO ─────────────────────────────────── */
+        /* ── [CSS] HERO ─────────────────────────────────── */
         .hero {
             background: linear-gradient(160deg, var(--hero-bg-1) 0%, var(--hero-bg-2) 100%);
             padding: 40px 24px 54px;
@@ -467,7 +467,7 @@
             opacity: .85;
         }
 
-        /* ── STAT CARDS ───────────────────────────── */
+        /* ── [CSS] STAT CARDS ───────────────────────────── */
         .stats-row {
             max-width: 1100px; margin: -30px auto 0; padding: 0 20px;
             display: grid;
@@ -475,7 +475,7 @@
             gap: 14px;
             position: relative; z-index: 10;
         }
-        /* ── Records personnels ── */
+        /* ── [CSS] Records personnels ── */
         .records-section {
             max-width: 1100px; margin: 18px auto 0; padding: 0 20px;
         }
@@ -528,10 +528,10 @@
         .stat-value { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 0; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; font-weight: 700; }
         .stat-sub { font-size: .78rem; color: var(--muted); }
 
-        /* ── MAIN LAYOUT ──────────────────────────── */
+        /* ── [CSS] MAIN LAYOUT ──────────────────────────── */
         .main { max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
 
-        /* ── FORM ─────────────────────────────────── */
+        /* ── [CSS] FORM ─────────────────────────────────── */
         .form-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -619,7 +619,7 @@
         .btn-add:active { transform: translateY(0); }
 
 
-        /* ── Bouton choisir exercices renfo ── */
+        /* ── [CSS] Bouton choisir exercices renfo ── */
         .btn-renfo-exo {
             background: linear-gradient(135deg, #fde08a, #f5c07e);
             border: none; border-radius: 8px;
@@ -629,7 +629,7 @@
         }
         .btn-renfo-exo:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,140,0,.3); }
 
-        /* ── Modale exercices ── */
+        /* ── [CSS] Modale exercices ── */
         #exoModal {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,.55); z-index: 9999;
@@ -680,7 +680,7 @@
             display: flex; gap: 8px; align-items: flex-start;
         }
 
-        /* ── TABLE ────────────────────────────────── */
+        /* ── [CSS] TABLE ────────────────────────────────── */
         .table-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -732,7 +732,7 @@
             color: #1a4f9e !important;
         }
 
-        /* ── BACKUP REMINDER BANNER ──────────────── */
+        /* ── [CSS] BACKUP REMINDER BANNER ──────────────── */
         .backup-banner {
             max-width: 1100px; margin: 18px auto 0; padding: 0 20px;
         }
@@ -776,7 +776,7 @@
         }
         .bb-btn-dismiss:hover { background: rgba(240,192,96,.2); }
 
-        /* ── BARRE SAUVEGARDE PRINCIPALE ──────────── */
+        /* ── [CSS] BARRE SAUVEGARDE PRINCIPALE ──────────── */
         .save-bar {
             max-width: 1100px;
             margin: 18px auto 0;
@@ -923,7 +923,7 @@
         .gpx-dropzone p { font-weight: 700; font-size: .9rem; }
         .gpx-dropzone small { font-size: .78rem; opacity: .7; display: block; margin-top: 4px; }
 
-        /* ── MODAL ──────────────────────────────── */
+        /* ── [CSS] MODAL ──────────────────────────────── */
         .modal-overlay {
             position: fixed; inset: 0;
             background: rgba(0,0,0,.45);
@@ -1140,7 +1140,7 @@
         th svg.ic use { color: var(--green); }
         .empty-state p { font-size: .95rem; }
 
-        /* ── RECAP ────────────────────────────────── */
+        /* ── [CSS] RECAP ────────────────────────────────── */
         .recap-card {
             background: linear-gradient(135deg, #1a4a32 0%, #2d7a56 100%);
             border-radius: var(--radius);
@@ -1170,7 +1170,7 @@
         .recap-item-value { font-family: var(--font-display); font-size: 2rem; letter-spacing: 1px; line-height: 1; margin: 4px 0 2px; }
         .recap-item-sub { font-size: .8rem; opacity: .65; }
 
-        /* ── RPE MOYENNE COLORÉE ───────────────────── */
+        /* ── [CSS] RPE MOYENNE COLORÉE ───────────────────── */
         .recap-item.rpe-green  { background: rgba(45,158,114,.25); border-color: rgba(45,158,114,.5); }
         .recap-item.rpe-orange { background: rgba(232,160,32,.22); border-color: rgba(232,160,32,.5); }
         .recap-item.rpe-red    { background: rgba(224,82,82,.22);  border-color: rgba(224,82,82,.5); }
@@ -1185,7 +1185,7 @@
         .rpe-badge.orange { background: rgba(232,160,32,.3);  color: #fde08a; }
         .rpe-badge.red    { background: rgba(224,82,82,.3);   color: #fdb0b0; }
 
-        /* ── ACCORDÉON RPE 80/20 ───────────────────── */
+        /* ── [CSS] ACCORDÉON RPE 80/20 ───────────────────── */
         .rpe-accordion {
             margin-top: 18px;
             border-radius: 12px;
@@ -1254,7 +1254,7 @@
             margin-top: 8px; font-style: italic;
         }
 
-        /* ── FOOTER ───────────────────────────────── */
+        /* ── [CSS] FOOTER ───────────────────────────────── */
         .footer {
             text-align: center;
             padding: 20px;
@@ -1264,7 +1264,7 @@
         .footer a { color: var(--green); text-decoration: none; font-weight: 700; }
         .footer a:hover { text-decoration: underline; }
 
-        /* ── TOAST ─────────────────────────────────── */
+        /* ── [CSS] TOAST ─────────────────────────────────── */
         .toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
             background: var(--text); color: #fff;
@@ -1298,7 +1298,7 @@
             max-width: 780px !important;
         }
 
-        /* ── VIDEO BUTTON & MODAL ──────────────────── */
+        /* ── [CSS] VIDEO BUTTON & MODAL ──────────────────── */
         .video-btn {
             background: transparent;
             color: var(--muted); border: none;
@@ -1354,7 +1354,7 @@
         }
         @keyframes vPulse { from { opacity:1; } to { opacity:.3; } }
 
-        /* ── TRAIL OBJECTIF ────────────────────────── */
+        /* ── [CSS] TRAIL OBJECTIF ────────────────────────── */
         .trail-goal-bar {
             background: rgba(14,22,17,.88);
             border: 1px solid rgba(93,202,165,.22);
@@ -1407,7 +1407,7 @@
             font-size: .9rem; font-style: italic;
         }
 
-        /* ── READINESS BANNER ──────────────────────── */
+        /* ── [CSS] READINESS BANNER ──────────────────────── */
         .readiness-wrap {
             margin-top: 22px;
             border-radius: 14px;
@@ -1455,7 +1455,7 @@
         .rb-crit-dot.orange { background: #e8a020; }
         .rb-crit-dot.red    { background: #e05252; }
 
-        /* ── COACH IA ───────────────────────────────── */
+        /* ── [CSS] COACH IA ───────────────────────────────── */
         .coach-section {
             margin-top: 22px; border-radius: var(--radius); overflow: hidden;
             border: 1.5px solid var(--border); background: var(--card);
@@ -1633,7 +1633,7 @@
             font-size: .75rem; cursor: pointer; font-family: var(--font-main);
         }
 
-        /* ── FORM VALIDATION ───────────────────────── */
+        /* ── [CSS] FORM VALIDATION ───────────────────────── */
         .form-group { position: relative; }
 
         .field-error {
@@ -1680,7 +1680,7 @@
             box-shadow: 0 4px 14px rgba(224,82,82,.35);
         }
 
-        /* ── RENFORCEMENT HINT BOX ─────────────────── */
+        /* ── [CSS] RENFORCEMENT HINT BOX ─────────────────── */
         .renfo-hint {
             display: none;
             margin-top: 8px;
@@ -1795,7 +1795,7 @@
         [data-theme="dark"] .filter-select option { background: #1a2620; color: #e8f5f0; }
         [data-theme="dark"] .filter-count { background: #0d3326; }
 
-        /* ── WEEKLY CHART ──────────────────────────── */
+        /* ── [CSS] WEEKLY CHART ──────────────────────────── */
         .chart-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -1871,7 +1871,7 @@
         [data-theme="dark"] .chart-tabs { background: #0f1a14; }
         [data-theme="dark"] .chart-tab.active { background: var(--card); }
 		
-		/* ── POIDS & WATTS ─────────────────────────────── */
+		/* ── [CSS] POIDS & WATTS ─────────────────────────────── */
 .weight-box {
     background: rgba(14,22,17,.88);
     border: 1px solid rgba(93,202,165,.22);
@@ -1933,7 +1933,7 @@ th.watts-col, td.watts-col {
     margin-top: 8px;
 }
 
-/* ── COLONNES FUSIONNÉES ───────────────────── */
+/* ── [CSS] COLONNES FUSIONNÉES ───────────────────── */
 /* Perf (Vitesse + D+) */
 th.perf-col, td.perf-col {
     width: 130px;
@@ -2077,7 +2077,7 @@ th.effort-col, td.effort-col {
     margin-top: 2px;
 }
     
-        /* ── GILET LESTÉ ──────────────────────────── */
+        /* ── [CSS] GILET LESTÉ ──────────────────────────── */
         .gilet-group { display: none; }
         .gilet-group.show { display: block; }
         .gilet-badge {
@@ -2088,7 +2088,7 @@ th.effort-col, td.effort-col {
             margin-top: 6px;
         }
 
-        /* ── VUE SEMAINE EN COURS ─────────────────── */
+        /* ── [CSS] VUE SEMAINE EN COURS ─────────────────── */
         .week-view-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -2167,7 +2167,7 @@ th.effort-col, td.effort-col {
             font-weight: 400;
         }
 
-        /* ── INDICATEUR DE CHARGE ─────────────────── */
+        /* ── [CSS] INDICATEUR DE CHARGE ─────────────────── */
         .charge-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -2240,15 +2240,15 @@ th.effort-col, td.effort-col {
 </head>
 <body>
 
-<!-- ── BURGER MOBILE ──────────────────────────── -->
+<!-- ── [HTML] BURGER MOBILE ──────────────────────────── -->
 <button id="sb-burger" onclick="sidebarOpen()" aria-label="Menu">
     <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
 </button>
 
-<!-- ── OVERLAY MOBILE ─────────────────────────── -->
+<!-- ── [HTML] OVERLAY MOBILE ─────────────────────────── -->
 <div id="sb-overlay" onclick="sidebarClose()"></div>
 
-<!-- ── SIDEBAR ────────────────────────────────── -->
+<!-- ── [HTML] SIDEBAR ────────────────────────────────── -->
 <nav id="sidebar" aria-label="Navigation principale">
 
     <!-- Logo -->
@@ -2326,7 +2326,7 @@ th.effort-col, td.effort-col {
     </div>
 </nav>
 
-<!-- ── CONTENU PRINCIPAL ───────────────────────── -->
+<!-- ── [HTML] CONTENU PRINCIPAL ───────────────────────── -->
 <div id="main-content">
 
 <!-- Sprite icones Tabler (MIT) - hors ligne -->
@@ -2373,7 +2373,7 @@ th.effort-col, td.effort-col {
 <g id="i-trend"><path d="M3 17l6 -6l4 4l8 -8"/><path d="M14 7h7v7"/></g>
 </defs></svg>
 
-<!-- ── HERO ─────────────────────────────────────── -->
+<!-- ── [HTML] HERO ─────────────────────────────────────── -->
 <div class="hero">
     <!-- Massif en couches — SVG inline pour stabilité Android (pas de backdrop-filter ni de pseudo-éléments) -->
     <svg class="hero-mountain" viewBox="0 0 1200 220" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">
@@ -2526,13 +2526,13 @@ th.effort-col, td.effort-col {
     </div>
 </div>
 
-<!-- ── RECORDS PERSONNELS ─────────────────────────── -->
+<!-- ── [HTML] RECORDS PERSONNELS ─────────────────────────── -->
 <div class="records-section" id="recordsSection" style="display:none">
     <div class="records-title"><svg class="ic"><use href="#i-trophy"/></svg> Records personnels</div>
     <div class="records-grid" id="recordsGrid"></div>
 </div>
 
-<!-- ── BACKUP REMINDER BANNER ─────────────────────── -->
+<!-- ── [HTML] BACKUP REMINDER BANNER ─────────────────────── -->
 <div class="backup-banner" id="backupBanner" style="display:none">
     <div class="backup-banner-inner">
         <div class="bb-left">
@@ -2549,7 +2549,7 @@ th.effort-col, td.effort-col {
     </div>
 </div>
 
-<!-- ── BARRE SAUVEGARDE ───────────────────────────── -->
+<!-- ── [HTML] BARRE SAUVEGARDE ───────────────────────────── -->
 <div class="save-bar">
     <div class="save-bar-inner">
         <div class="save-bar-title">
@@ -2571,7 +2571,7 @@ th.effort-col, td.effort-col {
     </div>
 </div>
 
-<!-- ── MAIN ───────────────────────────────────────── -->
+<!-- ── [HTML] MAIN ───────────────────────────────────────── -->
 <div class="main">
 
     <!-- TABLE -->
@@ -2955,7 +2955,7 @@ th.effort-col, td.effort-col {
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ── MODAL ──────────────────────────────────────── -->
+<!-- ── [HTML] MODAL ──────────────────────────────────────── -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalIfOverlay(event)">
     <div class="modal-box">
         <div class="modal-header">
@@ -3118,7 +3118,7 @@ th.effort-col, td.effort-col {
 <script>
 
 /* ─────────────────────────────────────────
-   HELPERS DE TYPE (Course/Trail/Marche/etc.)
+   [JS:MISC] HELPERS DE TYPE
 ───────────────────────────────────────── */
 // Types qui ont des champs distance / D+ / durée / vitesse
 const TYPES_WITH_DISTANCE = ['Course', 'Trail', 'Marche', 'Tapis de course'];
@@ -3140,7 +3140,7 @@ function hasWattsManuel(t)  { return TYPES_WITH_WATTS_MANUAL.includes(t); }
 function hasWattsCalc(t)    { return TYPES_WITH_WATTS_CALC.includes(t); }
 
 /* ─────────────────────────────────────────
-   MODALE EXERCICES RENFORCEMENT
+   [JS:UI] MODALE EXERCICES RENFORCEMENT
 ───────────────────────────────────────── */
 window._selectedExos = [];
 window._selectedExosModal = [];
@@ -3217,7 +3217,7 @@ if (document.readyState === 'loading') {
 }
 
 /* ─────────────────────────────────────────
-   STORAGE
+   [JS:STORAGE] STORAGE
 ───────────────────────────────────────── */
 function getEntries() {
     try {
@@ -3273,7 +3273,7 @@ function safeColor(c, fallback = '#888') {
 }
 
 /* ─────────────────────────────────────────
-   SPEED HELPERS
+   [JS:MISC] SPEED HELPERS
 ───────────────────────────────────────── */
 function calcSpeed(km, minutes) {
     km = Number(km) || 0;
@@ -3370,10 +3370,10 @@ function toggleModalFields() {
 }
 
 /* ─────────────────────────────────────────
-   ADD ENTRY (main form)
+   [JS:FORM] ADD ENTRY (main form)
 ───────────────────────────────────────── */
 /* ═══════════════════════════════════════════════
-   FORM VALIDATION HELPERS
+   [JS:FORM] FORM VALIDATION HELPERS
 ═══════════════════════════════════════════════ */
 function showError(fieldId, errId) {
     const field = document.getElementById(fieldId);
@@ -3445,7 +3445,7 @@ function validateForm(prefix) {
 }
 
 /* ─────────────────────────────────────────
-   MODAL
+   [JS:UI] MODAL
 ───────────────────────────────────────── */
 function resetModalForm() {
     /* Vide tous les champs de la modale d'ajout pour éviter de garder
@@ -3521,7 +3521,7 @@ function switchTab(tab) {
 }
 
 /* ─────────────────────────────────────────
-   ADD / EDIT ENTRY FROM MODAL
+   [JS:FORM] ADD / EDIT ENTRY FROM MODAL
 ───────────────────────────────────────── */
 let editingEntryId = null; // null = mode ajout, sinon id de la séance en cours d'édition
 
@@ -3630,7 +3630,7 @@ function addEntryFromModal() {
 }
 
 /* ─────────────────────────────────────────
-   GPX PARSER
+   [JS:GPX] GPX PARSER
 ───────────────────────────────────────── */
 let pendingGpxEntry = null;
 
@@ -3854,7 +3854,7 @@ function confirmGpxImport() {
 }
 
 /* ─────────────────────────────────────────
-   RENDER
+   [JS:RENDER] RENDER
 ───────────────────────────────────────── */
 function renderAll() {
     const entries = getEntries();
@@ -3869,7 +3869,7 @@ function renderAll() {
 }
 
 /* ─────────────────────────────────────────
-   RECORDS PERSONNELS 🏆
+   [JS:RENDER] RECORDS PERSONNELS
 ───────────────────────────────────────── */
 function renderRecords(entries) {
     const section = document.getElementById('recordsSection');
@@ -3932,9 +3932,14 @@ function renderRecords(entries) {
 }
 
 /* ═══════════════════════════════════════════════
-   FILTERS & SORT
+   [JS:FILTERS] FILTERS & SORT
 ═══════════════════════════════════════════════ */
+
+const ROWS_DEFAULT = 50; // séances affichées par défaut
+let   _showAll     = false; // true quand l'utilisateur clique "Voir tout"
+
 function applyFilters() {
+    _showAll = false; // retour à 50 à chaque changement de filtre
     const type   = document.getElementById('fType').value;
     const period = document.getElementById('fPeriod').value;
     const rpe    = document.getElementById('fRpe').value;
@@ -4020,14 +4025,20 @@ function renderTable(entries) {
 
     if (!entries.length) {
         empty.classList.remove('hidden');
+        _updateShowMoreBtn(0, 0);
         return;
     }
     empty.classList.add('hidden');
 
+    // ── Limiter à ROWS_DEFAULT sauf si l'utilisateur a cliqué "Voir tout" ──
+    const total    = entries.length;
+    const displayed = _showAll ? total : Math.min(total, ROWS_DEFAULT);
+    const visible  = entries.slice(0, displayed);
+
     // entries already sorted by applyFilters — no re-sort needed
     const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-    entries.forEach((item, i) => {
+    visible.forEach((item, i) => {
         const isCourse = ['Course','Trail'].includes(item.type);
         const isMarche = item.type === 'Marche';
         const hasDist  = isDistanceType(item.type); // Course, Trail, Marche
@@ -4112,6 +4123,71 @@ function renderTable(entries) {
         `;
         tbody.appendChild(row);
     });
+
+    // ── Bouton "Voir tout" / "Réduire" ──
+    _updateShowMoreBtn(displayed, total);
+}
+
+function _updateShowMoreBtn(displayed, total) {
+    // Supprimer l'ancien bouton s'il existe
+    const existing = document.getElementById('showMoreBtn');
+    if (existing) existing.remove();
+
+    // Pas besoin de bouton si tout est affiché ou tableau vide
+    if (total <= ROWS_DEFAULT || displayed === 0) return;
+
+    const hidden = total - displayed;
+    const btn    = document.createElement('div');
+    btn.id       = 'showMoreBtn';
+    btn.style.cssText = 'text-align:center;padding:16px 0 8px;';
+
+    if (!_showAll) {
+        btn.innerHTML = `
+            <button onclick="_toggleShowAll()" style="
+                background:rgba(93,202,165,.1);
+                border:1.5px solid rgba(93,202,165,.3);
+                color:var(--green);
+                font-family:var(--font-main);
+                font-size:.85rem;
+                font-weight:700;
+                padding:10px 22px;
+                border-radius:10px;
+                cursor:pointer;
+                transition:background .15s;
+            " onmouseover="this.style.background='rgba(93,202,165,.18)'"
+               onmouseout="this.style.background='rgba(93,202,165,.1)'">
+                ↓ Voir les ${hidden} séances suivantes (${total} au total)
+            </button>`;
+    } else {
+        btn.innerHTML = `
+            <button onclick="_toggleShowAll()" style="
+                background:none;
+                border:1px solid var(--border);
+                color:var(--muted);
+                font-family:var(--font-main);
+                font-size:.82rem;
+                font-weight:600;
+                padding:8px 18px;
+                border-radius:10px;
+                cursor:pointer;
+            ">
+                ↑ Réduire (afficher les 50 plus récentes)
+            </button>`;
+    }
+
+    // Insérer après le tableau
+    const tableCard = document.querySelector('.table-card');
+    if (tableCard) tableCard.appendChild(btn);
+}
+
+function _toggleShowAll() {
+    _showAll = !_showAll;
+    applyFilters();
+    // Si on réduit, remonter en haut du tableau
+    if (!_showAll) {
+        const tc = document.querySelector('.table-card');
+        if (tc) tc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function renderStats(entries) {
@@ -4275,7 +4351,7 @@ function toggleRpeAccordion() {
 }
 
 /* ─────────────────────────────────────────
-   DELETE / CLEAR
+   [JS:STORAGE] DELETE / CLEAR
 ───────────────────────────────────────── */
 function deleteEntry(id) {
     if (!confirm('Supprimer cette séance ?')) return;
@@ -4292,7 +4368,7 @@ function clearAll() {
 }
 
 /* ─────────────────────────────────────────
-   EXPORT / IMPORT
+   [JS:STORAGE] EXPORT / IMPORT
 ───────────────────────────────────────── */
 
 /* ─── CSV EXPORT ──────────────────────────────── */
@@ -4439,7 +4515,7 @@ function exportPDF() {
 }
 
 /* ═══════════════════════════════════════════════
-   SAUVEGARDE COMPLÈTE  (séances + titre + objectif trail + infos utilisateur)
+   [JS:STORAGE] SAUVEGARDE COMPLÈTE
 ═══════════════════════════════════════════════ */
 /* ── Construit l'objet de sauvegarde complet (utilisé par l'export
       manuel ET l'auto-backup pour garantir un format identique) ── */
@@ -4568,7 +4644,7 @@ function importFullBackup(e) {
 }
 
 /* ═══════════════════════════════════════════════
-   AUTO-BACKUP SILENCIEUX
+   [JS:STORAGE] AUTO-BACKUP SILENCIEUX
    - Toutes les 48h si des données existent
    - Après 3 nouvelles séances depuis la dernière sauvegarde auto
 ═══════════════════════════════════════════════ */
@@ -4677,7 +4753,7 @@ function dismissBackupBanner() {
 }
 
 /* ─────────────────────────────────────────
-   TITLE EDIT
+   [JS:UI] TITLE EDIT
 ───────────────────────────────────────── */
 function editTitle() {
     const el = document.getElementById('title');
@@ -4690,7 +4766,7 @@ function editTitle() {
 }
 
 /* ─────────────────────────────────────────
-   INIT
+   [JS:UI] INIT
 ───────────────────────────────────────── */
 function loadData() {
     const savedTitle = localStorage.getItem('customTrailTitle');
@@ -4710,7 +4786,7 @@ function loadData() {
 }
 
 /* ═══════════════════════════════════════════════
-   THEME TOGGLE  🌙 / ☀️
+   [JS:UI] THEME TOGGLE
 ═══════════════════════════════════════════════ */
 function initTheme() {
     const saved = localStorage.getItem('theme');
@@ -4769,7 +4845,7 @@ function updateToggleBtn(theme) {
 
 
 /* ═══════════════════════════════════════════════
-   (Banque photos / IndexedDB supprimée — upload direct uniquement)
+   [JS:MISC] Nettoyage IndexedDB legacy
 ═══════════════════════════════════════════════ */
 
 // Nettoyage de l'ancienne base IndexedDB des photos (utilisateurs migrant depuis l'ancienne version)
@@ -4787,7 +4863,7 @@ function updateToggleBtn(theme) {
 
 
 /* ═══════════════════════════════════════════════
-   VIDEO MODAL
+   [JS:VIDEO] VIDEO MODAL
 ═══════════════════════════════════════════════ */
 let _videoEntry  = null;
 let _videoBgImg  = null;
@@ -5486,7 +5562,7 @@ function generateVideo() {
 }
 
 /* ═══════════════════════════════════════════════
-   TRAIL REFERENCE TABLE (from CSV)
+   [JS:TRAIL] TRAIL REFERENCE TABLE
 ═══════════════════════════════════════════════ */
 const TRAIL_REFS = [
     { dist: 10,  kmMin: 30,  kmMax: 50,  dpMin: 800,  dpMax: 1800, hMin: 4,  hMax: 7,  longMin: 90,  longMax: 120, remark: 'Priorité vitesse et seuil ; D+ modéré.' },
@@ -5499,7 +5575,7 @@ const TRAIL_REFS = [
 ];
 
 /* ═══════════════════════════════════════════════
-   TRAIL PLAN — Finisher vs Performance
+   [JS:TRAIL] TRAIL PLAN — Finisher vs Performance
 ═══════════════════════════════════════════════ */
 var TRAIL_DATA = {
     genderFactor: { 'H': 1.0, 'F': 1.15 },
@@ -5557,7 +5633,7 @@ function getRefForDistance(km) {
 }
 
 /* ═══════════════════════════════════════════════
-   COACH IA
+   [JS:COACH] COACH IA
 ═══════════════════════════════════════════════ */
 
 function buildCoachContext() {
@@ -6412,7 +6488,7 @@ function renderReadiness() {
 }
 
 /* ═══════════════════════════════════════════════
-   GRAPHIQUE HEBDOMADAIRE  – Canvas pur, 0 librairie
+   [JS:CHART] GRAPHIQUE HEBDOMADAIRE
 ═══════════════════════════════════════════════ */
 let _chartTab = 'both'; // km | dplus | both
 
@@ -6425,7 +6501,7 @@ function switchChartTab(tab) {
 
 
 /* ═══════════════════════════════════════════════════════
-   VUE SEMAINE EN COURS
+   [JS:CHART] VUE SEMAINE EN COURS
 ═══════════════════════════════════════════════════════ */
 function renderWeekView(entries) {
     const card = document.getElementById('weekViewCard');
@@ -6502,7 +6578,7 @@ function renderWeekView(entries) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   INDICATEUR DE CHARGE SEMAINE N vs N-1
+   [JS:CHART] INDICATEUR DE CHARGE SEMAINE N vs N-1
 ═══════════════════════════════════════════════════════ */
 function renderChargeIndicator(entries) {
     const card = document.getElementById('chargeCard');
@@ -6739,7 +6815,7 @@ document.addEventListener('keydown', e => {
     }
 });
 /* ─────────────────────────────────────────
-    AGE + CATEGORIE
+    [JS:MISC] AGE + CATEGORIE
 ───────────────────────────────────────── */
 function getAgeCategory(age) {
     if (age == null || isNaN(age)) {
@@ -6781,7 +6857,7 @@ function updateAgeCategory() {
 }
 
 /* ─────────────────────────────────────────
-   POIDS UTILISATEUR & CALCUL WATTS
+   [JS:MISC] POIDS UTILISATEUR & CALCUL WATTS
 ───────────────────────────────────────── */
 
 // Sauvegarde / chargement des infos utilisateur
@@ -6900,7 +6976,7 @@ function getWattsDisplay(entry) {
 }
 
 /* ─────────────────────────────────────────
-   CALCUL DES CALORIES — Équation de Keytel
+   [JS:MISC] CALCUL DES CALORIES — Équation de Keytel
    Si pas de FC saisie → retourne null (rien affiché)
 ───────────────────────────────────────── */
 function calculerKcal(genre, age, poids, fcMoy, dureeMin) {
@@ -6935,7 +7011,7 @@ function getKcalDisplay(entry) {
 }
 
 /* ─────────────────────────────────────────
-   MODALE DÉTAIL (Nutrition + Notes + Gilet)
+   [JS:UI] MODALE DÉTAIL (Nutrition + Notes + Gilet)
 ───────────────────────────────────────── */
 function openDetailModal(id) {
     const entry = getEntries().find(e => e.id === id);
@@ -7026,7 +7102,7 @@ if (savedAge !== null && document.getElementById("userAge")) {
 
 </script>
 
-<!-- ── DETAIL MODAL (Nutrition / Notes / Gilet) ───── -->
+<!-- ── [HTML] DETAIL MODAL (Nutrition / Notes / Gilet) ───── -->
 <div class="modal-overlay" id="detailModalOverlay" onclick="closeDetailIfOverlay(event)">
     <div class="modal-box" style="max-width:560px">
         <div class="modal-header">
@@ -7039,7 +7115,7 @@ if (savedAge !== null && document.getElementById("userAge")) {
     </div>
 </div>
 
-<!-- ── GOAL MODAL ──────────────────────────────── -->
+<!-- ── [HTML] GOAL MODAL ──────────────────────────────── -->
 <div class="modal-overlay" id="goalModalOverlay" onclick="closeGoalIfOverlay(event)">
     <div class="modal-box" style="max-width:540px">
         <div class="modal-header">
@@ -7095,7 +7171,7 @@ if (savedAge !== null && document.getElementById("userAge")) {
     </div>
 </div>
 
-<!-- ── VIDEO MODAL ─────────────────────────────── -->
+<!-- ── [HTML] VIDEO MODAL ─────────────────────────────── -->
 <div class="modal-overlay" id="videoModalOverlay" onclick="closeVideoIfOverlay(event)">
     <div class="modal-box modal-box-wide">
         <div class="modal-header">
@@ -7201,7 +7277,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 </script>
 
-<!-- ── FIN main-content ───────────────────────── -->
+<!-- ── [HTML] FIN main-content ───────────────────────── -->
 </div><!-- /#main-content -->
 
 <script>
