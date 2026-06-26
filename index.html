@@ -5787,6 +5787,114 @@ function buildCoachContext() {
         totalSeances: entries.length,
         dateJour
     };
+
+    // Calculer les alertes intelligentes après avoir construit le contexte
+    ctx.alerts = buildAlerts(ctx);
+    return ctx;
+}
+
+/* ─────────────────────────────────────────
+   [JS:COACH] ANALYSE INTELLIGENTE — buildAlerts
+───────────────────────────────────────── */
+function buildAlerts(ctx) {
+    const g       = ctx.objectif;
+    const weeks   = ctx.semaines;
+    const af      = ctx.alerteFatigue;
+    const c       = ctx.chargeCetteSemaine;
+
+    // ── Données de base ──────────────────────────────────────────
+    const semsAvecKm   = weeks.filter(w => w.km > 0);
+    const kmMoyen4sem  = semsAvecKm.length
+        ? Math.round(semsAvecKm.reduce((s,w) => s+w.km, 0) / semsAvecKm.length)
+        : 0;
+    const dpMoyen4sem  = semsAvecKm.length
+        ? Math.round(semsAvecKm.reduce((s,w) => s+(w.dp||0), 0) / semsAvecKm.length)
+        : 0;
+
+    // ── Phase de préparation selon semaines restantes ────────────
+    const semRestantes  = g ? (g.semainesRestantes || 0) : 0;
+    const phase = !g ? 'généraliste'
+        : semRestantes > 10 ? 'build'
+        : semRestantes > 3  ? 'spécifique'
+        : 'affûtage';
+
+    // ── 1. Surcharge — ratio vs moyenne 4 semaines (plus fiable que vs N-1) ──
+    const kmSemCours    = c.km;
+    const ratioVsMoy    = kmMoyen4sem > 0 ? Math.round((kmSemCours / kmMoyen4sem) * 100) : null;
+    const seuilSurcharge = kmMoyen4sem >= 50 ? 120 : 130; // adaptatif comme avant
+    const surcharge     = ratioVsMoy !== null && ratioVsMoy > seuilSurcharge
+        ? { ratio: ratioVsMoy, seuil: seuilSurcharge, kmMoyen: kmMoyen4sem }
+        : null;
+
+    // ── 2. Progression trop rapide — pente sur 4 semaines ──────
+    // Comparer sem 1 (la plus récente) vs sem 4 (la plus ancienne)
+    let progressionRapide = null;
+    if (semsAvecKm.length >= 3) {
+        const semRecente   = weeks[0].km;
+        const semAncienne  = weeks[weeks.length - 1].km;
+        if (semAncienne > 0) {
+            const progressPct = Math.round(((semRecente - semAncienne) / semAncienne) * 100);
+            // >40% de progression en 4 semaines = signal, contextualisé selon la phase
+            const seuilProg = phase === 'build' ? 50 : 30;
+            if (progressPct > seuilProg) {
+                progressionRapide = { pct: progressPct, seuil: seuilProg, phase };
+            }
+        }
+    }
+
+    // ── 3. Monotonie — écart RPE entre les semaines ─────────────
+    const rpeSems = weeks.filter(w => w.rpe).map(w => Number(w.rpe));
+    let monotonie = null;
+    if (rpeSems.length >= 2) {
+        const rpeMoy = rpeSems.reduce((s,v) => s+v, 0) / rpeSems.length;
+        const ecartType = Math.sqrt(rpeSems.reduce((s,v) => s + Math.pow(v-rpeMoy,2), 0) / rpeSems.length);
+        // Écart-type < 0.6 sur le RPE moyen hebdo = entraînement monotone
+        if (ecartType < 0.6 && rpeSems.length >= 3) {
+            monotonie = { rpeMoyen: Math.round(rpeMoy*10)/10, ecartType: Math.round(ecartType*100)/100 };
+        }
+    }
+
+    // ── 4. % séances à RPE élevé (≥7) sur 4 semaines ───────────
+    let pctRpeEleve = null;
+    const totalRpeSeances = weeks.reduce((s,w) => s + (w.seances||0), 0);
+    if (totalRpeSeances > 0 && af.rpeLourdsRecents !== undefined) {
+        // Approximation : on a le nombre de RPE≥8 sur 7j, on estime le ratio
+        const rpeHautGlobal = weeks.reduce((s,w) => {
+            // Utiliser la polarisation si dispo
+            if (w.polarisation) return s + Math.round(w.seances * (w.polarisation.intense||0) / 100);
+            return s;
+        }, 0);
+        if (rpeHautGlobal > 0 && totalRpeSeances > 0) {
+            pctRpeEleve = Math.round((rpeHautGlobal / totalRpeSeances) * 100);
+            // Si >40% des séances sont intenses = signal (cible 80/20)
+            pctRpeEleve = pctRpeEleve > 40 ? pctRpeEleve : null;
+        }
+    }
+
+    // ── 5. Jours de repos insuffisants (14 derniers jours) ──────
+    // On estime via les journées triples et le volume
+    const signalFatigueCumul = af.joursTriples >= 3 || af.rpeLourdsRecents >= 4;
+
+    // ── 6. D+ insuffisant vs objectif ───────────────────────────
+    let dpInsuffisant = null;
+    if (g && g.dplusNum > 0 && phase === 'build') {
+        const dpCibleHebdo = Math.round(g.dplusNum / 8); // réparti sur 8 semaines de build
+        if (dpMoyen4sem < dpCibleHebdo * 0.6) { // moins de 60% de la cible = signal
+            dpInsuffisant = { dpMoyen: dpMoyen4sem, dpCible: dpCibleHebdo };
+        }
+    }
+
+    return {
+        phase,
+        kmMoyen4sem,
+        dpMoyen4sem,
+        surcharge,
+        progressionRapide,
+        monotonie,
+        pctRpeEleve,
+        signalFatigueCumul,
+        dpInsuffisant
+    };
 }
 
 function buildCoachPrompt(ctx) {
@@ -5865,6 +5973,38 @@ CONTEXTE TRAIL CLASSIQUE :
 - Sorties longues mensuelles pour construire l'endurance de base
 - Volume D+ hebdomadaire adapté à la distance objectif`;
 
+    // ── Alertes intelligentes contextualisées à l'objectif ──────
+    const al = ctx.alerts || {};
+    const alertesLines = [];
+
+    if (al.surcharge) {
+        alertesLines.push(`⚠️ SURCHARGE : volume semaine en cours à ${al.surcharge.ratio}% de la moyenne 4 semaines (${al.surcharge.kmMoyen} km/sem) — seuil adaptatif : ${al.surcharge.seuil}%. ${al.phase === 'affûtage' ? 'En phase d\'affûtage : réduire impérativement.' : al.phase === 'build' ? 'En phase de build : surveiller la récupération.' : ''}`);
+    }
+
+    if (al.progressionRapide) {
+        alertesLines.push(`📈 PROGRESSION RAPIDE : +${al.progressionRapide.pct}% de volume sur 4 semaines (seuil ${al.progressionRapide.phase} : ${al.progressionRapide.seuil}%). Risque de surmenage si non accompagné d'une semaine de décharge.`);
+    }
+
+    if (al.monotonie) {
+        alertesLines.push(`🔁 MONOTONIE : RPE moyen hebdo stable à ${al.monotonie.rpeMoyen} (écart-type ${al.monotonie.ecartType} — très faible). L'entraînement manque de variation d'intensité. Proposer une alternance charge/décharge.`);
+    }
+
+    if (al.pctRpeEleve) {
+        alertesLines.push(`🔴 INTENSITÉ EXCESSIVE : ${al.pctRpeEleve}% des séances au-dessus de RPE 6 — bien au-delà de la cible 80/20. Risque d'accumulation de fatigue chronique.`);
+    }
+
+    if (al.signalFatigueCumul) {
+        alertesLines.push(`😓 FATIGUE CUMULÉE : cumul de journées triples et séances très intenses détecté. Le système nerveux a besoin de récupération active.`);
+    }
+
+    if (al.dpInsuffisant) {
+        alertesLines.push(`⛰️ D+ INSUFFISANT : moyenne ${al.dpInsuffisant.dpMoyen}m D+/semaine vs cible ${al.dpInsuffisant.dpCible}m/semaine pour être prêt à l'objectif. Augmenter progressivement le dénivelé sur les sorties longues.`);
+    }
+
+    const alertesTxt = alertesLines.length
+        ? `\nALERTES INTELLIGENTES (contextualisées à l'objectif "${al.phase}") :\n${alertesLines.join('\n')}`
+        : `\nPAS D'ALERTE DÉTECTÉE — profil de charge cohérent avec la phase "${al.phase}".`;
+
     // ── Le prompt retourné ne contient QUE les données (le system est séparé dans l'appel API)
     return `DONNÉES ATHLÈTE — ${ctx.dateJour}
 
@@ -5877,6 +6017,7 @@ ${chargeTxt}${alerteFatigueTxt}
 4 DERNIÈRES SEMAINES :
 ${weeksTxt}
 ${directivesObjectif}
+${alertesTxt}
 
 Analyse et génère le JSON demandé.`;
 }
