@@ -3,10 +3,13 @@
   "short_name": "SRN Trail",
   "description": "Suivi de préparation trail hors ligne — Seb Run Nature",
   "start_url": "/dashboard-suivi-trail/",
+  "scope": "/dashboard-suivi-trail/",
   "display": "standalone",
   "background_color": "#2aaf81",
   "theme_color": "#2aaf81",
   "orientation": "portrait",
+  "lang": "fr",
+  "categories": ["health", "fitness", "sports"],
   "icons": [
     {
       "src": "/dashboard-suivi-trail/icon-192.png",
@@ -18,17 +21,11 @@
       "src": "/dashboard-suivi-trail/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/dashboard-suivi-trail/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/dashboard-suivi-trail/icon_dashboard.svg",
-      "sizes": "512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     }
