@@ -1846,13 +1846,27 @@
         }
         .chart-wrap {
             position: relative;
-            height: 220px;
+            min-height: 220px;
             width: 100%;
         }
         .chart-wrap canvas {
             width: 100% !important;
-            height: 100% !important;
+            height: 220px !important;
+            display: block;
         }
+        .chart-wrap canvas[style*="display:none"],
+        .chart-wrap canvas[style*="display: none"] {
+            height: 0 !important;
+        }
+        .hbar-chart {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .hbar-chart.visible { display: flex; }
         .chart-footer-row {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
@@ -2932,8 +2946,8 @@ th.effort-col, td.effort-col {
         </div>
         <div class="chart-wrap">
             <canvas id="weeklyChart"></canvas>
-            <canvas id="chargeChart" style="display:none"></canvas>
-            <canvas id="rpeChart"    style="display:none"></canvas>
+            <div id="chargeHbar" class="hbar-chart"></div>
+            <div id="rpeHbar"    class="hbar-chart"></div>
         </div>
         <div class="chart-footer-row" id="chartFooterRow"></div>
     </div>
@@ -6720,40 +6734,32 @@ function switchChartTab(tab) {
     document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
     document.getElementById('ctab-' + tab).classList.add('active');
 
-    // Afficher/masquer les canvas et blocs barres
-    const weekly  = document.getElementById('weeklyChart');
-    const charge  = document.getElementById('chargeChart');
-    const rpe     = document.getElementById('rpeChart');
-    const hbars   = document.querySelectorAll('.hbar-chart');
+    const weekly     = document.getElementById('weeklyChart');
+    const chargeHbar = document.getElementById('chargeHbar');
+    const rpeHbar    = document.getElementById('rpeHbar');
 
-    // Tout masquer d'abord
-    [weekly, charge, rpe].forEach(c => { if(c) c.style.display = 'none'; });
-    hbars.forEach(b => b.classList.remove('visible'));
+    // Tout masquer
+    weekly.style.display = 'none';
+    chargeHbar.classList.remove('visible');
+    rpeHbar.classList.remove('visible');
 
     const entries = getEntries();
 
     if (tab === 'charge') {
         drawChargeChart(entries);
+        chargeHbar.classList.add('visible');
     } else if (tab === 'rpe') {
         drawRpeChart(entries);
+        rpeHbar.classList.add('visible');
     } else {
-        if (weekly) weekly.style.display = '';
+        weekly.style.display = 'block';
         renderWeeklyChart(entries);
     }
 }
 
 /* ── Charge comparative 4 semaines (barres horizontales) ── */
 function drawChargeChart(entries) {
-    const wrap = document.querySelector('.chart-wrap');
-
-    // Créer ou réutiliser le bloc hbar
-    let block = document.getElementById('chargeHbar');
-    if (!block) {
-        block = document.createElement('div');
-        block.id = 'chargeHbar';
-        block.className = 'hbar-chart';
-        wrap.appendChild(block);
-    }
+    const block = document.getElementById('chargeHbar');
     block.innerHTML = '';
     block.classList.add('visible');
 
@@ -6837,15 +6843,7 @@ function drawChargeChart(entries) {
 
 /* ── Répartition RPE par zones (barres horizontales) ── */
 function drawRpeChart(entries) {
-    const wrap = document.querySelector('.chart-wrap');
-
-    let block = document.getElementById('rpeHbar');
-    if (!block) {
-        block = document.createElement('div');
-        block.id = 'rpeHbar';
-        block.className = 'hbar-chart';
-        wrap.appendChild(block);
-    }
+    const block = document.getElementById('rpeHbar');
     block.innerHTML = '';
     block.classList.add('visible');
 
