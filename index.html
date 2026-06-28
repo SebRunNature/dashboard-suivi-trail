@@ -1870,6 +1870,84 @@
         [data-theme="dark"] .chart-card { background: var(--card); }
         [data-theme="dark"] .chart-tabs { background: #0f1a14; }
         [data-theme="dark"] .chart-tab.active { background: var(--card); }
+
+        /* ── [CSS] GRAPHIQUES BARRES HORIZONTALES ─────────────── */
+        .hbar-chart {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px 4px;
+            height: 100%;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .hbar-chart.visible { display: flex; }
+        .hbar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 32px;
+        }
+        .hbar-label {
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--muted);
+            width: 72px;
+            flex-shrink: 0;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .hbar-track {
+            flex: 1;
+            height: 20px;
+            background: rgba(93,202,165,.08);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .hbar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width .5s cubic-bezier(.4,0,.2,1);
+            position: relative;
+        }
+        .hbar-fill.current { box-shadow: 0 0 8px rgba(93,202,165,.4); }
+        .hbar-value {
+            font-size: .72rem;
+            font-weight: 800;
+            color: var(--text);
+            width: 56px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        /* Ligne cible sur les barres */
+        .hbar-target-line {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 2px;
+            background: rgba(232,160,32,.8);
+            border-radius: 2px;
+        }
+        /* Légende sous les graphiques barres */
+        .hbar-legend {
+            display: flex;
+            gap: 14px;
+            padding: 8px 4px 2px;
+            font-size: .68rem;
+            font-weight: 700;
+            color: var(--muted);
+            flex-wrap: wrap;
+        }
+        .hbar-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .hbar-legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
 		
 		/* ── [CSS] POIDS & WATTS ─────────────────────────────── */
 .weight-box {
@@ -2845,13 +2923,17 @@ th.effort-col, td.effort-col {
                 <p class="chart-sub">Km de course <span class="chart-legend-dot green"></span> et D+ <span class="chart-legend-dot amber"></span></p>
             </div>
             <div class="chart-tabs">
-                <button class="chart-tab active" id="ctab-km"   onclick="switchChartTab('km')">🏃 Km</button>
-                <button class="chart-tab"         id="ctab-dplus" onclick="switchChartTab('dplus')">⛰️ D+</button>
-                <button class="chart-tab"         id="ctab-both"  onclick="switchChartTab('both')">Les deux</button>
+                <button class="chart-tab active" id="ctab-km"     onclick="switchChartTab('km')">Km</button>
+                <button class="chart-tab"         id="ctab-dplus"  onclick="switchChartTab('dplus')">D+</button>
+                <button class="chart-tab"         id="ctab-both"   onclick="switchChartTab('both')">Les deux</button>
+                <button class="chart-tab"         id="ctab-charge" onclick="switchChartTab('charge')">Charge 4 sem</button>
+                <button class="chart-tab"         id="ctab-rpe"    onclick="switchChartTab('rpe')">Zones RPE</button>
             </div>
         </div>
         <div class="chart-wrap">
             <canvas id="weeklyChart"></canvas>
+            <canvas id="chargeChart" style="display:none"></canvas>
+            <canvas id="rpeChart"    style="display:none"></canvas>
         </div>
         <div class="chart-footer-row" id="chartFooterRow"></div>
     </div>
@@ -6631,13 +6713,219 @@ function renderReadiness() {
 /* ═══════════════════════════════════════════════
    [JS:CHART] GRAPHIQUE HEBDOMADAIRE
 ═══════════════════════════════════════════════ */
-let _chartTab = 'both'; // km | dplus | both
+let _chartTab = 'both'; // km | dplus | both | charge | rpe
 
 function switchChartTab(tab) {
     _chartTab = tab;
     document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
     document.getElementById('ctab-' + tab).classList.add('active');
-    renderWeeklyChart(getEntries());
+
+    // Afficher/masquer les canvas et blocs barres
+    const weekly  = document.getElementById('weeklyChart');
+    const charge  = document.getElementById('chargeChart');
+    const rpe     = document.getElementById('rpeChart');
+    const hbars   = document.querySelectorAll('.hbar-chart');
+
+    // Tout masquer d'abord
+    [weekly, charge, rpe].forEach(c => { if(c) c.style.display = 'none'; });
+    hbars.forEach(b => b.classList.remove('visible'));
+
+    const entries = getEntries();
+
+    if (tab === 'charge') {
+        drawChargeChart(entries);
+    } else if (tab === 'rpe') {
+        drawRpeChart(entries);
+    } else {
+        if (weekly) weekly.style.display = '';
+        renderWeeklyChart(entries);
+    }
+}
+
+/* ── Charge comparative 4 semaines (barres horizontales) ── */
+function drawChargeChart(entries) {
+    const wrap = document.querySelector('.chart-wrap');
+
+    // Créer ou réutiliser le bloc hbar
+    let block = document.getElementById('chargeHbar');
+    if (!block) {
+        block = document.createElement('div');
+        block.id = 'chargeHbar';
+        block.className = 'hbar-chart';
+        wrap.appendChild(block);
+    }
+    block.innerHTML = '';
+    block.classList.add('visible');
+
+    // Calculer les 4 dernières semaines
+    const now = new Date();
+    const weeks = [];
+    for (let w = 0; w < 4; w++) {
+        const wEnd   = new Date(now); wEnd.setDate(now.getDate() - (now.getDay()===0?6:now.getDay()-1) + 6 - w*7); wEnd.setHours(23,59,59);
+        const wStart = new Date(wEnd); wStart.setDate(wEnd.getDate() - 6); wStart.setHours(0,0,0,0);
+        let km = 0, dp = 0, eqCAP = 0;
+        entries.forEach(e => {
+            const d = new Date(e.date);
+            if (d < wStart || d > wEnd) return;
+            const k = Number(e.km)||0;
+            const mins = Number(e.minutes)||0;
+            if (['Course','Trail','Tapis de course'].includes(e.type)) { km += k; dp += Number(e.dplus)||0; eqCAP += k; }
+            else if (e.type === 'Vélo Home Trainer') { const kHT = k > 0 ? k : (Number(e.speedKmh)||0)*(mins/60); eqCAP += kHT/2.4; }
+        });
+        const label = w === 0 ? 'Cette sem.' : w === 1 ? 'Sem. -1' : w === 2 ? 'Sem. -2' : 'Sem. -3';
+        weeks.unshift({ label, km: Math.round(km*10)/10, dp: Math.round(dp), eqCAP: Math.round(eqCAP*10)/10, isCurrent: w === 0 });
+    }
+
+    // Récupérer la cible D+ depuis l'objectif (localStorage)
+    const goal = (() => { try { return JSON.parse(localStorage.getItem('trailGoal')||'{}'); } catch(e){return{};} })();
+    const dpCible = goal.dplus ? Math.round(Number(goal.dplus)/8) : 0;
+
+    const maxKm = Math.max(...weeks.map(w=>w.km), 1);
+    const maxDp = Math.max(...weeks.map(w=>w.dp), dpCible||1, 1);
+
+    // Titre
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 4px 4px;';
+    title.textContent = 'Charge km trail/course — 4 semaines';
+    block.appendChild(title);
+
+    // Barres KM
+    weeks.forEach(w => {
+        const pct = maxKm > 0 ? Math.round((w.km/maxKm)*100) : 0;
+        const color = w.isCurrent ? '#5dcaa5' : 'rgba(93,202,165,.45)';
+        const row = document.createElement('div'); row.className = 'hbar-row';
+        row.innerHTML = `
+            <div class="hbar-label">${w.label}</div>
+            <div class="hbar-track">
+                <div class="hbar-fill${w.isCurrent?' current':''}" style="width:${pct}%;background:${color}"></div>
+            </div>
+            <div class="hbar-value">${w.km} km</div>`;
+        block.appendChild(row);
+    });
+
+    // Séparateur + D+
+    if (weeks.some(w => w.dp > 0)) {
+        const sep = document.createElement('div');
+        sep.style.cssText = 'font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:6px 4px 2px;';
+        sep.textContent = 'Dénivelé D+ — 4 semaines' + (dpCible ? ` (cible ~${dpCible}m/sem)` : '');
+        block.appendChild(sep);
+
+        weeks.forEach(w => {
+            const pct       = maxDp > 0 ? Math.round((w.dp/maxDp)*100) : 0;
+            const pctCible  = dpCible && maxDp > 0 ? Math.round((dpCible/maxDp)*100) : 0;
+            const color     = w.isCurrent ? '#e8a020' : 'rgba(232,160,32,.45)';
+            const row = document.createElement('div'); row.className = 'hbar-row';
+            row.innerHTML = `
+                <div class="hbar-label">${w.label}</div>
+                <div class="hbar-track">
+                    <div class="hbar-fill${w.isCurrent?' current':''}" style="width:${pct}%;background:${color}"></div>
+                    ${pctCible ? `<div class="hbar-target-line" style="left:${pctCible}%"></div>` : ''}
+                </div>
+                <div class="hbar-value">${w.dp}m</div>`;
+            block.appendChild(row);
+        });
+    }
+
+    // Légende
+    const legend = document.createElement('div'); legend.className = 'hbar-legend';
+    legend.innerHTML = `
+        <div class="hbar-legend-item"><div class="hbar-legend-dot" style="background:#5dcaa5"></div>Semaine en cours</div>
+        <div class="hbar-legend-item"><div class="hbar-legend-dot" style="background:rgba(93,202,165,.45)"></div>Semaines précédentes</div>
+        ${dpCible ? '<div class="hbar-legend-item"><div class="hbar-legend-dot" style="background:#e8a020"></div>Ligne cible D+</div>' : ''}`;
+    block.appendChild(legend);
+}
+
+/* ── Répartition RPE par zones (barres horizontales) ── */
+function drawRpeChart(entries) {
+    const wrap = document.querySelector('.chart-wrap');
+
+    let block = document.getElementById('rpeHbar');
+    if (!block) {
+        block = document.createElement('div');
+        block.id = 'rpeHbar';
+        block.className = 'hbar-chart';
+        wrap.appendChild(block);
+    }
+    block.innerHTML = '';
+    block.classList.add('visible');
+
+    // Calculer les 4 dernières semaines
+    const now = new Date();
+    const zones = { facile: 0, modere: 0, dur: 0, total: 0 };
+
+    // Sur les 28 derniers jours
+    const cutoff = new Date(now); cutoff.setDate(now.getDate()-28);
+    const recent = entries.filter(e => new Date(e.date) >= cutoff && e.rpe);
+    recent.forEach(e => {
+        const r = Number(e.rpe);
+        zones.total++;
+        if (r <= 4)      zones.facile++;
+        else if (r <= 6) zones.modere++;
+        else             zones.dur++;
+    });
+
+    // Titre
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 4px 8px;';
+    title.textContent = `Répartition RPE — 28 derniers jours (${zones.total} séances avec RPE)`;
+    block.appendChild(title);
+
+    if (zones.total === 0) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'text-align:center;color:var(--muted);font-size:.88rem;padding:20px;';
+        empty.textContent = 'Aucune séance avec RPE renseigné sur les 28 derniers jours.';
+        block.appendChild(empty);
+        return;
+    }
+
+    const zonesDef = [
+        { key: 'facile', label: 'Zone facile',  sub: 'RPE 1-4', color: '#5dcaa5', cible: 80 },
+        { key: 'modere', label: 'Zone modérée', sub: 'RPE 5-6', color: '#e8a020', cible: 15 },
+        { key: 'dur',    label: 'Zone dure',    sub: 'RPE 7-10', color: '#e05252', cible:  5 },
+    ];
+
+    zonesDef.forEach(z => {
+        const count = zones[z.key];
+        const pct   = zones.total > 0 ? Math.round((count/zones.total)*100) : 0;
+        const pctCible = z.cible;
+        const diff  = pct - pctCible;
+        const diffTxt = diff > 0 ? `+${diff}%` : diff < 0 ? `${diff}%` : '=';
+        const diffColor = z.key === 'facile'
+            ? (diff < 0 ? '#e05252' : '#5dcaa5')
+            : (diff > 0 ? '#e05252' : '#5dcaa5');
+
+        const row = document.createElement('div'); row.className = 'hbar-row'; row.style.minHeight = '40px';
+        row.innerHTML = `
+            <div class="hbar-label" style="width:88px;font-size:.7rem;">
+                <div style="color:var(--text);font-weight:800">${z.label}</div>
+                <div style="color:var(--muted);font-weight:600;font-size:.62rem">${z.sub}</div>
+            </div>
+            <div class="hbar-track" style="height:26px;">
+                <div class="hbar-fill" style="width:${pct}%;background:${z.color};opacity:.85"></div>
+                <div class="hbar-target-line" style="left:${pctCible}%;background:rgba(255,255,255,.5)"></div>
+            </div>
+            <div class="hbar-value" style="width:72px;">
+                <span style="color:${z.color};font-size:.8rem">${pct}%</span>
+                <span style="color:${diffColor};font-size:.68rem;margin-left:4px">${diffTxt}</span>
+            </div>`;
+        block.appendChild(row);
+    });
+
+    // Résumé polarisation
+    const polar80 = zones.total > 0 ? Math.round((zones.facile/zones.total)*100) : 0;
+    const summary = document.createElement('div');
+    summary.style.cssText = 'margin-top:8px;padding:8px 10px;background:rgba(93,202,165,.07);border-radius:8px;font-size:.78rem;';
+    const statusColor = polar80 >= 75 ? '#5dcaa5' : polar80 >= 60 ? '#e8a020' : '#e05252';
+    const statusTxt   = polar80 >= 75 ? '✅ Bonne polarisation 80/20' : polar80 >= 60 ? '⚠️ Polarisation insuffisante' : '🔴 Trop de séances intenses';
+    summary.innerHTML = `<span style="color:${statusColor};font-weight:800">${statusTxt}</span> — <span style="color:var(--muted)">${polar80}% en zone facile (cible ≥80%). Trait blanc = cible 80/20.</span>`;
+    block.appendChild(summary);
+
+    // Légende
+    const legend = document.createElement('div'); legend.className = 'hbar-legend';
+    legend.innerHTML = zonesDef.map(z =>
+        `<div class="hbar-legend-item"><div class="hbar-legend-dot" style="background:${z.color}"></div>${z.label} (cible ${z.cible}%)</div>`
+    ).join('');
+    block.appendChild(legend);
 }
 
 
