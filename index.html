@@ -5654,7 +5654,8 @@ const TRAIL_REFS = [
     { dist: 40,  kmMin: 55,  kmMax: 80,  dpMin: 2200, dpMax: 3500, hMin: 7,  hMax: 10, longMin: 180, longMax: 240, remark: 'Sorties longues prioritaires ; renforcement musculaire régulier.' },
     { dist: 50,  kmMin: 60,  kmMax: 90,  dpMin: 2500, dpMax: 4000, hMin: 8,  hMax: 12, longMin: 240, longMax: 300, remark: 'Back-to-back possibles ; volume > 8h/semaine fortement conseillé.' },
     { dist: 100, kmMin: 70,  kmMax: 110, dpMin: 3500, dpMax: 5500, hMin: 10, hMax: 15, longMin: 300, longMax: 420, remark: 'D+ hebdo ≈ D+ course ; longues sorties + back-to-back obligatoires.' },
-    { dist: 150, kmMin: 80,  kmMax: 130, dpMin: 4500, dpMax: 7000, hMin: 12, hMax: 18, longMin: 360, longMax: 480, remark: 'Très haut volume ; multi-jours ; récupération critique.' }
+    { dist: 150, kmMin: 80,  kmMax: 130, dpMin: 4000, dpMax: 6000, hMin: 12, hMax: 17, longMin: 360, longMax: 480, remark: 'Très haut volume ; multi-jours ; récupération critique.' },
+    { dist: 200, kmMin: 90,  kmMax: 140, dpMin: 2000, dpMax: 4000, hMin: 13, hMax: 18, longMin: 420, longMax: 540, remark: 'Ultra long : priorité endurance, marche active, gestion nutrition et sommeil. D+ progressif sur la durée.' }
 ];
 
 /* ═══════════════════════════════════════════════
@@ -6620,8 +6621,11 @@ function renderReadiness() {
     var kmMaxTarget = plan.kmMax;
     var hMinTarget  = plan.hMin;
     var hMaxTarget  = plan.hMax;
-    var dpMinTarget = ref.dpMin * (isPerf ? 1.2 : 1.0);
-    var dpMaxTarget = ref.dpMax * (isPerf ? 1.2 : 1.0);
+    // Multiplicateur performance : +10% pour les ultras (≥100km), +20% pour les distances courtes
+    // Au-delà de 100km, +20% de D+ serait irréaliste — on plafonne à +10%
+    const perfMult = (isPerf && ref.dist >= 100) ? 1.1 : (isPerf ? 1.2 : 1.0);
+    var dpMinTarget = ref.dpMin * perfMult;
+    var dpMaxTarget = ref.dpMax * perfMult;
 
     var entries = getEntries();
     if (!entries.length) {
