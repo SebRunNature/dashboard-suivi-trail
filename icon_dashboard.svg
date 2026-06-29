@@ -1,6 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="80" fill="#2aaf81"/>
-  <text x="256" y="200" font-family="Arial, sans-serif" font-weight="900" font-size="140" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">SRN</text>
-  <text x="256" y="320" font-family="Arial, sans-serif" font-weight="700" font-size="46" fill="rgba(255,255,255,0.7)" text-anchor="middle" dominant-baseline="middle">DASHBOARD</text>
-  <path d="M140 400 L200 320 L240 360 L290 280 L340 340 L380 300 L420 400Z" fill="rgba(255,255,255,0.15)" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img">
+  <title>Run Nature — Dashboard Trail</title>
+  <desc>Icône montagne chaîne de sommets, pic central dominant avec éclat au sommet, dégradé vert forêt sombre</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1d3727"/>
+      <stop offset="100%" stop-color="#0f1a13"/>
+    </linearGradient>
+    <linearGradient id="mL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#007a52"/>
+      <stop offset="100%" stop-color="#0f1a13"/>
+    </linearGradient>
+    <linearGradient id="mC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00c484"/>
+      <stop offset="100%" stop-color="#1a3020"/>
+    </linearGradient>
+    <linearGradient id="mR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#008f5f"/>
+      <stop offset="100%" stop-color="#0f1a13"/>
+    </linearGradient>
+    <clipPath id="rounded">
+      <rect width="512" height="512" rx="115" ry="115"/>
+    </clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="115" ry="115" fill="url(#bg)"/>
+
+  <g clip-path="url(#rounded)">
+    <polygon points="60,390 170,185 280,390" fill="url(#mL)" opacity="0.82"/>
+    <polygon points="245,390 385,195 520,390" fill="url(#mR)" opacity="0.78"/>
+    <polygon points="108,390 256,72 404,390" fill="url(#mC)"/>
+    <polygon points="256,72 234,122 256,108 278,122" fill="#ffffff" opacity="0.92"/>
+    <line x1="60" y1="390" x2="452" y2="390" stroke="#00a06e" stroke-width="3" stroke-linecap="round" opacity="0.22"/>
+  </g>
 </svg>
