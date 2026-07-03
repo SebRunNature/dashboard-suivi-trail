@@ -16,7 +16,9 @@
 - **Graphiques charge 4 semaines et zones RPE** — répartition facile/modéré/dur avec indicateur polarisation 80/20.
 - **Export PDF** — journal complet de séances + plan Coach IA imprimable.
 - **Partage image** — génère une image 1080×1080 style Coros/Garmin pour Instagram.
-- **Sidebar navigation** — tableau de bord, séances, Coach IA, objectif, ressources.
+- **Sauvegarde & restauration** — export/import complet des données au format JSON (fichier téléchargeable, indépendant du localStorage).
+- **Mode sombre / clair** — bascule accessible depuis la sidebar, préférence mémorisée.
+- **Sidebar navigation** — tableau de bord, séances, Coach IA, objectif, applications sœurs (Minuteur d'intervalle) et ressources (méthode utilisée, RPE, EF, FAQ).
 
 ---
 
@@ -50,7 +52,7 @@ git clone https://github.com/sebrunnature/run-nature-apps.git
 3. Dans l'app → sidebar → "Clé API Coach IA" → colle ta clé
 4. La clé reste stockée localement, jamais transmise à Run Nature
 
-Modèle par défaut : **Claude Haiku 4.5** (rapide, économique). Sonnet 4.6 disponible pour des analyses plus détaillées.
+Modèle par défaut : **Claude Haiku 4.5** (~0,01 $/analyse, recommandé). **Claude Sonnet 4.6** disponible pour des analyses plus détaillées (~0,03 $/analyse). Le choix du modèle se change directement depuis le résultat du Coach IA.
 
 ---
 
@@ -73,7 +75,7 @@ Modèle par défaut : **Claude Haiku 4.5** (rapide, économique). Sonnet 4.6 dis
 
 Le cache SW est versionné manuellement dans `sw.js` :
 ```js
-const CACHE = 'srn-dashboard-trail-v41';
+const CACHE = 'srn-dashboard-trail-v43';
 ```
 Incrémenter ce numéro à chaque déploiement pour que les utilisateurs reçoivent la mise à jour.
 
