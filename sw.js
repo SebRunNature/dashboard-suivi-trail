@@ -1,4 +1,4 @@
-const CACHE = 'srn-dashboard-trail-v43';
+const CACHE = 'srn-dashboard-trail-v44';
 const FILES = [
   '/dashboard-suivi-trail/',
   '/dashboard-suivi-trail/index.html',
@@ -76,4 +76,11 @@ self.addEventListener('fetch', function(e) {
       });
     })
   );
+});
+
+/* ── Mise à jour immédiate demandée par la page (bannière "Nouvelle version") ── */
+self.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
