@@ -2374,6 +2374,13 @@ th.effort-col, td.effort-col {
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
             Minuteur d'intervalle
         </a>
+        <a class="sb-item" href="https://montre-de-vie.com/" target="_blank" rel="noopener" title="Âge chronologique vs âge biologique">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
+            <span style="display:flex;flex-direction:column;line-height:1.25;">
+                Montre de Vie
+                <span style="font-size:.68rem;opacity:.55;font-weight:500;">Âge chrono vs âge bio</span>
+            </span>
+        </a>
     </div>
 
     <div class="sb-divider"></div>
@@ -2533,6 +2540,12 @@ th.effort-col, td.effort-col {
                 <div class="tg-name tg-empty" id="tgName">Clique pour définir ton trail objectif…</div>
             </div>
         </div>
+
+        <!-- FRISE DE PÉRIODISATION (rendue par renderPeriodization) -->
+        <div id="periodBar" style="display:none;margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;"></div>
+
+        <!-- PRÉDICTEUR DE CHRONO (rendu par renderChronoPredictor) -->
+        <div id="chronoPredictor" style="display:none;margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;"></div>
     </div>
 </div>
 <div class="stats-row" id="statsRow">
@@ -3150,7 +3163,7 @@ th.effort-col, td.effort-col {
                     </div>
                     <div class="form-group" id="m-renfoExoGroup" style="display:none;">
                         <label>🏋️ Exercices</label>
-                        <button type="button" class="btn-renfo-exo" onclick="openExoModal('modal')">🏋️ Choisir mes exercices</button>
+                        <button type="button" class="btn-renfo-exo" onclick="openExoModal()">🏋️ Choisir mes exercices</button>
                         <small id="m-renfoExoPreview" style="color:var(--muted);font-size:.75rem;margin-top:4px;display:block;"></small>
                     </div>
                     <div class="form-group full" id="m-wattsGroup" style="display:none;">
@@ -3236,13 +3249,10 @@ function hasWattsCalc(t)    { return TYPES_WITH_WATTS_CALC.includes(t); }
 /* ─────────────────────────────────────────
    [JS:UI] MODALE EXERCICES RENFORCEMENT
 ───────────────────────────────────────── */
-window._selectedExos = [];
 window._selectedExosModal = [];
-window._exoTarget = 'main'; // 'main' ou 'modal'
 
-function openExoModal(target) {
-    window._exoTarget = target || 'main';
-    const current = target === 'modal' ? (window._selectedExosModal || []) : (window._selectedExos || []);
+function openExoModal() {
+    const current = window._selectedExosModal || [];
     // Reset checkboxes
     document.querySelectorAll('#exoGrid .exo-item').forEach(label => {
         const cb = label.querySelector('input[type=checkbox]');
@@ -3267,29 +3277,16 @@ function confirmExoSelection() {
     document.querySelectorAll('#exoGrid input[type=checkbox]:checked').forEach(cb => {
         selected.push(cb.value);
     });
-    const target = window._exoTarget;
-    if (target === 'modal') {
-        window._selectedExosModal = selected;
-        const preview = document.getElementById('m-renfoExoPreview');
-        if (preview) preview.textContent = selected.length ? selected.join(' · ') : '';
-        // Injecter dans les notes modal
-        const notesEl = document.getElementById('m-notes');
-        if (notesEl && selected.length) {
-            const tag = '[Exo: ' + selected.join(' · ') + ']';
-            const existing = notesEl.value.replace(/\[Exo:[^\]]*\]/g, '').trim();
-            notesEl.value = (existing ? existing + ' ' : '') + tag;
-        }
-    } else {
-        window._selectedExos = selected;
-        const preview = document.getElementById('renfoExoPreview');
-        if (preview) preview.textContent = selected.length ? selected.join(' · ') : '';
-        // Injecter dans les notes main form
-        const notesEl = document.getElementById('notes');
-        if (notesEl && selected.length) {
-            const tag = '[Exo: ' + selected.join(' · ') + ']';
-            const existing = notesEl.value.replace(/\[Exo:[^\]]*\]/g, '').trim();
-            notesEl.value = (existing ? existing + ' ' : '') + tag;
-        }
+    // Cible unique : la modale de saisie (l'ancien formulaire principal a été retiré)
+    window._selectedExosModal = selected;
+    const preview = document.getElementById('m-renfoExoPreview');
+    if (preview) preview.textContent = selected.length ? selected.join(' · ') : '';
+    // Injecter dans les notes de la modale
+    const notesEl = document.getElementById('m-notes');
+    if (notesEl && selected.length) {
+        const tag = '[Exo: ' + selected.join(' · ') + ']';
+        const existing = notesEl.value.replace(/\[Exo:[^\]]*\]/g, '').trim();
+        notesEl.value = (existing ? existing + ' ' : '') + tag;
     }
     closeExoModal();
 }
@@ -3957,6 +3954,8 @@ function renderAll() {
     renderReadiness();
     renderWeekView(entries);
     renderChargeIndicator(entries);
+    renderChronoPredictor();   // le chrono estimé dépend des séances
+    renderPeriodization();     // et la frise de la date du jour
     renderWeeklyChart(entries);
     applyFilters(); // handles renderTable with filters
     initCoach();
@@ -4508,6 +4507,35 @@ function exportCSV() {
 }
 
 /* ─── PDF EXPORT ──────────────────────────────── */
+/* Helper robuste : ouvre une fenêtre d'impression, ou télécharge le HTML
+   si window.open est bloqué (WebView Android / TWA / bloqueur de popups). */
+function openPrintWindow(html, filename) {
+    let w = null;
+    try { w = window.open('', '_blank'); } catch (e) { w = null; }
+    if (w && w.document) {
+        w.document.write(html);
+        w.document.close();
+        showToast('📄 Document prêt — utilise Imprimer / Enregistrer en PDF.');
+        return true;
+    }
+    // Fallback : téléchargement du fichier HTML (ouvrable puis imprimable en PDF)
+    try {
+        const blob = new Blob([html.replace(/<script>[\s\S]*?<\/script>/g, '')], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename || `run-nature-export-${new Date().toISOString().slice(0,10)}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        showToast('⬇️ Popup bloquée — fichier téléchargé. Ouvre-le puis Imprimer → PDF.', 4500);
+        return true;
+    } catch (e) {
+        showToast('⚠️ Export impossible sur cet appareil — utilise l\'export CSV.', 4000);
+        return false;
+    }
+}
+
 function exportPDF() {
     const entries = getEntries();
     if (!entries.length) { showToast('Aucune donnée à exporter.'); return; }
@@ -4549,7 +4577,7 @@ function exportPDF() {
             <td style="color:${rpeColor};font-weight:700">${e.rpe || '—'}</td>
             <td>${e.bpm ? `${e.bpm} bpm` : '—'}</td>
             <td style="color:#f97316;font-weight:700">${kcal !== null ? kcal + ' kcal' : '—'}</td>
-            <td>${e.notes || '—'}</td>
+            <td>${esc(e.notes || '—')}</td>
         </tr>`;
     }).join('');
 
@@ -4601,11 +4629,7 @@ function exportPDF() {
     <script>window.onload=()=>{window.print();}<\/script>
     </body></html>`;
 
-    const w = window.open('', '_blank');
-    if (!w) { showToast('⚠️ Autorise les popups pour générer le PDF.'); return; }
-    w.document.write(html);
-    w.document.close();
-    showToast('📄 PDF prêt — utilise Ctrl+P pour sauvegarder.');
+    openPrintWindow(html, `run-nature-suivi-${new Date().toISOString().slice(0,10)}.html`);
 }
 
 /* ═══════════════════════════════════════════════
@@ -4695,9 +4719,7 @@ function importFullBackup(e) {
 
             if (backup.title) {
                 localStorage.setItem('customTrailTitle', backup.title);
-                const titleEl = document.getElementById('title');
-                if (titleEl) titleEl.innerHTML = backup.title +
-                    `<span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>`;
+                // (élément #title supprimé de l'UI — le titre custom reste conservé dans localStorage)
             }
 
             // Restaurer l'objectif trail
@@ -4847,27 +4869,9 @@ function dismissBackupBanner() {
 }
 
 /* ─────────────────────────────────────────
-   [JS:UI] TITLE EDIT
-───────────────────────────────────────── */
-function editTitle() {
-    const el = document.getElementById('title');
-    const current = localStorage.getItem('customTrailTitle') || 'Suivi Préparation Trail';
-    const newTitle = prompt('Nouveau titre :', current);
-    if (newTitle && newTitle.trim()) {
-        localStorage.setItem('customTrailTitle', newTitle.trim());
-        el.innerHTML = esc(newTitle.trim()) + `<span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>`;
-    }
-}
-
-/* ─────────────────────────────────────────
    [JS:UI] INIT
 ───────────────────────────────────────── */
 function loadData() {
-    const savedTitle = localStorage.getItem('customTrailTitle');
-    const titleEl = document.getElementById('title');
-    if (savedTitle && titleEl) {
-        titleEl.innerHTML = esc(savedTitle) + `<span style="font-size:.32em;opacity:.55;display:block;font-family:var(--font-main);font-weight:500;letter-spacing:0;margin-top:8px;">Appuie pour renommer</span>`;
-    }
     initTheme();
     renderGoalBar();
     renderAll();
@@ -5821,8 +5825,15 @@ function buildCoachContext() {
         if (d>=monday)                     { currKm += ['Course','Trail','Tapis de course'].includes(typ) ? km_e : 0; currKmEqCAP += eqCAP; }
         if (d>=prevMonday && d<=prevSunday) { prevKm += ['Course','Trail','Tapis de course'].includes(typ) ? km_e : 0; prevKmEqCAP += eqCAP; }
     });
-    const chargeRatio    = prevKm      > 0 ? +(currKm/prevKm).toFixed(2)           : null;
-    const chargeRatioEq  = prevKmEqCAP > 0 ? +(currKmEqCAP/prevKmEqCAP).toFixed(2) : null;
+    // ── Point 7 : proratisation de la semaine en cours ─────────────
+    // Comparer une semaine partielle (ex: lundi matin = 0 km) à une semaine
+    // complète produit de fausses alertes de décharge. On projette le volume
+    // de la semaine en cours au prorata des jours écoulés (lun=1 … dim=7).
+    const daysElapsed     = Math.min(7, Math.max(1, Math.floor((now - monday) / 86400000) + 1));
+    const currKmProj      = currKm      * 7 / daysElapsed;
+    const currKmEqCAPProj = currKmEqCAP * 7 / daysElapsed;
+    const chargeRatio     = prevKm      > 0 ? +(currKmProj/prevKm).toFixed(2)           : null;
+    const chargeRatioEq   = prevKmEqCAP > 0 ? +(currKmEqCAPProj/prevKmEqCAP).toFixed(2) : null;
 
     // Point E — détection journées multiples et séances intenses récentes (7 derniers jours)
     const sept = new Date(now); sept.setDate(now.getDate()-7);
@@ -5849,7 +5860,7 @@ function buildCoachContext() {
     const moisFR  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
     const dateJour = `${joursFR[now.getDay()]} ${now.getDate()} ${moisFR[now.getMonth()]} ${now.getFullYear()}`;
 
-    return {
+    const ctx = {
         utilisateur: {
             genre,
             poids: poids+'kg',
@@ -5870,7 +5881,10 @@ function buildCoachContext() {
         semaines: weeks,
         chargeCetteSemaine: {
             km: Math.round(currKm),
+            kmProjete: Math.round(currKmProj),
+            joursEcoules: daysElapsed,
             kmEqCAP: Math.round(currKmEqCAP),
+            kmEqCAPProjete: Math.round(currKmEqCAPProj),
             ratioVsPrecedente: chargeRatio,
             ratioEqCAPVsPrecedente: chargeRatioEq
         },
@@ -5913,11 +5927,14 @@ function buildAlerts(ctx) {
         : semRestantes > 3  ? 'spécifique'
         : 'affûtage';
 
-    // ── 1. Surcharge — ratio vs moyenne 4 semaines (plus fiable que vs N-1) ──
-    const kmSemCours    = c.km;
+    // ── 1. Surcharge — ratio vs moyenne 4 semaines (volume PROJETÉ, pas partiel) ──
+    const kmSemCours    = c.kmProjete !== undefined ? c.kmProjete : c.km;
     const ratioVsMoy    = kmMoyen4sem > 0 ? Math.round((kmSemCours / kmMoyen4sem) * 100) : null;
     const seuilSurcharge = kmMoyen4sem >= 50 ? 120 : 130; // adaptatif comme avant
-    const surcharge     = ratioVsMoy !== null && ratioVsMoy > seuilSurcharge
+    // Garde-fou : les 2 premiers jours de semaine, la projection ×7 ou ×3.5
+    // amplifie trop une seule grosse sortie → pas d'alerte surcharge avant mercredi.
+    const projFiable    = (c.joursEcoules === undefined) || c.joursEcoules >= 3;
+    const surcharge     = projFiable && ratioVsMoy !== null && ratioVsMoy > seuilSurcharge
         ? { ratio: ratioVsMoy, seuil: seuilSurcharge, kmMoyen: kmMoyen4sem }
         : null;
 
@@ -6036,9 +6053,9 @@ function buildCoachPrompt(ctx) {
     const c = ctx.chargeCetteSemaine;
     let chargeTxt = '';
     if (c.ratioVsPrecedente !== null) {
-        chargeTxt = `Charge trail/course semaine en cours : ${c.km} km (ratio vs sem. précédente : ${Math.round(c.ratioVsPrecedente*100)}%) — seuils adaptés à ton volume : >${seuilHaut}% = pic risqué, <${seuilBas}% = décharge.`;
+        chargeTxt = `Charge trail/course semaine en cours : ${c.km} km réalisés en ${c.joursEcoules} jour(s) → projection fin de semaine : ${c.kmProjete} km (ratio projeté vs sem. précédente : ${Math.round(c.ratioVsPrecedente*100)}%) — seuils adaptés à ton volume : >${seuilHaut}% = pic risqué, <${seuilBas}% = décharge. NB : projection au prorata des jours écoulés, fiabilité limitée en début de semaine.`;
         if (c.kmEqCAP > c.km) {
-            chargeTxt += `\nCharge globale équivalente CAP (trail + vélo HT ÷2.4 + tapis) : ${c.kmEqCAP} km-eq — ratio global : ${c.ratioEqCAPVsPrecedente !== null ? Math.round(c.ratioEqCAPVsPrecedente*100)+'%' : 'N/A'}. Le cross-training contribue réellement à la fatigue globale même sans impact articulaire.`;
+            chargeTxt += `\nCharge globale équivalente CAP (trail + vélo HT ÷2.4 + tapis) : ${c.kmEqCAP} km-eq réalisés, projection ${c.kmEqCAPProjete} km-eq — ratio global projeté : ${c.ratioEqCAPVsPrecedente !== null ? Math.round(c.ratioEqCAPVsPrecedente*100)+'%' : 'N/A'}. Le cross-training contribue réellement à la fatigue globale même sans impact articulaire.`;
         }
     } else {
         chargeTxt = `Semaine en cours : ${c.km} km trail (sem. précédente sans données). Charge globale équivalente CAP : ${c.kmEqCAP} km-eq.`;
@@ -6100,11 +6117,16 @@ CONTEXTE TRAIL CLASSIQUE :
         ? `\nALERTES INTELLIGENTES (contextualisées à l'objectif "${al.phase}") :\n${alertesLines.join('\n')}`
         : `\nPAS D'ALERTE DÉTECTÉE — profil de charge cohérent avec la phase "${al.phase}".`;
 
+    // ── Phase de périodisation explicite (synchronisée avec la frise UI)
+    const phaseTxt = ctx.objectif && ctx.objectif.semainesRestantes !== null
+        ? `\nPHASE DE PÉRIODISATION ACTUELLE : "${al.phase}" — ${ctx.objectif.semainesRestantes} semaine(s) avant ${ctx.objectif.nom}. Calibre le plan sur cette phase (build = volume progressif, spécifique = D+ et sorties longues ciblées course, affûtage = réduction du volume en conservant un peu d'intensité).`
+        : '';
+
     // ── Le prompt retourné ne contient QUE les données (le system est séparé dans l'appel API)
     return `DONNÉES ATHLÈTE — ${ctx.dateJour}
 
 PROFIL : ${profilTxt}
-${goalTxt}
+${goalTxt}${phaseTxt}
 Total séances enregistrées : ${ctx.totalSeances}
 
 ${chargeTxt}${alerteFatigueTxt}
@@ -6280,10 +6302,7 @@ ${goal ? `<div class="goal-box">🎯 <strong>Objectif :</strong> ${goal.name || 
 <script>window.onload = () => { window.print(); }<\/script>
 </body></html>`;
 
-    const w = window.open('', '_blank');
-    if (!w) { showToast('⚠️ Autorise les popups pour imprimer'); return; }
-    w.document.write(html);
-    w.document.close();
+    openPrintWindow(html, `run-nature-plan-coach-${new Date().toISOString().slice(0,10)}.html`);
 }
 
 /* ── Copier le plan en texte (Google Sheets / Notes) ── */
@@ -6579,6 +6598,8 @@ function renderGoalBar() {
         name.innerHTML = 'Clique pour définir ton trail objectif…';
         const old = bar.querySelector('.tg-stats');    if (old) old.remove();
         const btn = bar.querySelector('.tg-edit-btn'); if (btn) btn.remove();
+        const pb = document.getElementById('periodBar');       if (pb) pb.style.display = 'none';
+        const cp = document.getElementById('chronoPredictor'); if (cp) cp.style.display = 'none';
         return;
     }
     bar.classList.add('has-goal');
@@ -6604,6 +6625,148 @@ function renderGoalBar() {
     let editBtn = bar.querySelector('.tg-edit-btn');
     if (!editBtn) { editBtn = document.createElement('button'); editBtn.className = 'tg-edit-btn'; editBtn.onclick = openGoalModal; bar.appendChild(editBtn); }
     editBtn.innerHTML = '<svg class="ic"><use href="#i-edit"/></svg> Modifier';
+
+    // Modules liés à l'objectif
+    renderPeriodization();
+    renderChronoPredictor();
+}
+
+/* ═══════════════════════════════════════════════
+   [JS:PREDICT] PRÉDICTEUR DE CHRONO — Riegel + km-effort
+   Modèle : distance-effort = km + D+/100 (1 km-effort ≈ 100 m D+).
+   Extrapolation Riegel T2 = T1 × (D2/D1)^k avec k=1.07 (trail).
+═══════════════════════════════════════════════ */
+function predictGoalTime() {
+    const goal = getGoal();
+    if (!goal || !goal.dist) return null;
+    const entries = getEntries();
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 120); // perfs des 4 derniers mois
+    const refs = entries.filter(e =>
+        ['Course','Trail'].includes(e.type) &&
+        Number(e.km) >= 5 && Number(e.minutes) > 0 &&
+        new Date(e.date + 'T12:00:00') >= cutoff
+    );
+    if (refs.length < 2) return null; // au moins 2 sorties de référence
+
+    const goalEff = Number(goal.dist) + (Number(goal.dplus) || 0) / 100;
+    const preds = refs.map(e => {
+        const dEff = Number(e.km) + (Number(e.dplus) || 0) / 100;
+        if (dEff <= 0) return null;
+        return { t: Number(e.minutes) * Math.pow(goalEff / dEff, 1.07), ratio: goalEff / dEff };
+    }).filter(Boolean);
+    if (!preds.length) return null;
+
+    // Médiane des prédictions (robuste aux sorties très lentes type rando)
+    const times = preds.map(p => p.t).sort((a, b) => a - b);
+    const median = times.length % 2 ? times[(times.length - 1) / 2]
+        : (times[times.length / 2 - 1] + times[times.length / 2]) / 2;
+
+    // Incertitude : ±8%, élargie à ±15% si forte extrapolation (objectif > 4× la plus longue référence)
+    const maxRefEff = Math.max(...refs.map(e => Number(e.km) + (Number(e.dplus) || 0) / 100));
+    const bigExtrapolation = goalEff / maxRefEff > 4;
+    const spread = bigExtrapolation ? 0.15 : 0.08;
+
+    return {
+        low: median * (1 - spread),
+        high: median * (1 + spread),
+        median, n: refs.length,
+        goalEff: Math.round(goalEff),
+        extrapolated: bigExtrapolation
+    };
+}
+
+function fmtChronoHM(mins) {
+    const h = Math.floor(mins / 60), m = Math.round(mins % 60);
+    return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`;
+}
+
+function renderChronoPredictor() {
+    const box = document.getElementById('chronoPredictor');
+    if (!box) return;
+    const goal = getGoal();
+    if (!goal || !goal.dist) { box.style.display = 'none'; return; }
+    const p = predictGoalTime();
+    if (!p) {
+        box.style.display = 'block';
+        box.innerHTML = `
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px;">⏱️ Chrono estimé — ${esc(goal.name)}</div>
+            <div style="font-size:.85rem;color:var(--muted);">Enregistre au moins 2 sorties Course/Trail de 5 km ou plus (avec durée) sur les 4 derniers mois pour obtenir une estimation.</div>`;
+        return;
+    }
+    box.style.display = 'block';
+    box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">⏱️ Chrono estimé — ${esc(goal.name)}</div>
+            <div style="font-size:.68rem;color:var(--muted);">basé sur ${p.n} sorties · ${p.goalEff} km-effort</div>
+        </div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--green-dk);margin-top:4px;">
+            ${fmtChronoHM(p.low)} – ${fmtChronoHM(p.high)}
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px;">
+            Modèle Riegel adapté trail (km + D+/100). Estimation médiane : ${fmtChronoHM(p.median)}.
+            ${p.extrapolated ? '⚠️ Objectif bien plus long que tes sorties actuelles — fourchette élargie, fiabilité limitée.' : 'Affine-toi avec des sorties longues proches des conditions de course.'}
+        </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   [JS:PERIOD] FRISE DE PÉRIODISATION
+   Modèle 16 semaines aligné sur la logique du Coach IA :
+   build (>10 sem) → spécifique (4–10 sem) → affûtage (≤3 sem) → course.
+═══════════════════════════════════════════════ */
+function renderPeriodization() {
+    const box = document.getElementById('periodBar');
+    if (!box) return;
+    const goal = getGoal();
+    if (!goal || !goal.date) { box.style.display = 'none'; return; }
+
+    const now  = new Date(); now.setHours(12, 0, 0, 0);
+    const race = new Date(goal.date + 'T12:00:00');
+    const daysLeft = Math.round((race - now) / 86400000);
+    if (daysLeft < 0) { box.style.display = 'none'; return; } // course passée
+
+    const TOTAL_W = 16;
+    const start = new Date(race); start.setDate(race.getDate() - TOTAL_W * 7);
+    // Position du curseur "aujourd'hui" (0 → 100 %)
+    const pct = Math.min(100, Math.max(0, ((now - start) / (race - start)) * 100));
+
+    // Segments (en % de la frise 16 sem) : build 6 sem, spécifique 7 sem, affûtage 3 sem
+    const segs = [
+        { label: 'Build',      weeks: 6, color: 'var(--green)',  desc: 'volume progressif' },
+        { label: 'Spécifique', weeks: 7, color: 'var(--amber)',  desc: 'D+ et sorties longues ciblées' },
+        { label: 'Affûtage',   weeks: 3, color: 'var(--sky)',    desc: 'réduction du volume' }
+    ];
+
+    // Phase actuelle — même logique que le Coach IA
+    const weeksLeft = Math.ceil(daysLeft / 7);
+    const phase = weeksLeft > 10 ? 'Build' : weeksLeft > 3 ? 'Spécifique' : daysLeft > 0 ? 'Affûtage' : 'Course';
+    const phaseSeg = segs.find(s => s.label === phase);
+
+    const barHtml = segs.map(s => `
+        <div style="flex:${s.weeks};background:${s.color};opacity:${s.label === phase ? 1 : .35};height:100%;position:relative;"
+             title="${s.label} — ${s.desc}"></div>`).join('');
+
+    const notStarted = now < start;
+    box.style.display = 'block';
+    box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">🗓️ Périodisation — ${esc(goal.name)}</div>
+            <div style="font-size:.78rem;font-weight:700;color:var(--green-dk);">
+                ${notStarted
+                    ? `Préparation dès le ${start.toLocaleDateString('fr-FR')}`
+                    : `Phase actuelle : ${phase}${phaseSeg ? ' · ' + phaseSeg.desc : ''} · J-${daysLeft}`}
+            </div>
+        </div>
+        <div style="position:relative;">
+            <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;">${barHtml}</div>
+            ${!notStarted ? `
+            <div style="position:absolute;top:-4px;left:calc(${pct.toFixed(1)}% - 1px);width:2px;height:20px;background:var(--text);border-radius:1px;"></div>
+            <div style="position:absolute;top:-22px;left:${pct.toFixed(1)}%;transform:translateX(-50%);font-size:.62rem;font-weight:700;color:var(--text);white-space:nowrap;">▼ ici</div>` : ''}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.66rem;color:var(--muted);margin-top:6px;">
+            <span>J-112 (16 sem)</span><span>J-70 (10 sem)</span><span>J-21 (3 sem)</span><span>🏁 ${race.toLocaleDateString('fr-FR')}</span>
+        </div>`;
+    // Espace pour le label "ici" au-dessus de la barre
+    if (!notStarted) box.style.paddingTop = '30px';
 }
 
 /* ── READINESS CALCULATOR ────────────────────── */
@@ -7688,7 +7851,20 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
                         'padding:8px 14px;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;">Recharger</button>';
                     document.body.appendChild(b);
                     document.getElementById('swUpdateBtn').addEventListener('click', function() {
-                        window.location.reload(true);
+                        // Activer le nouveau SW en attente, puis recharger quand il prend le contrôle
+                        if (reg.waiting) {
+                            let reloaded = false;
+                            navigator.serviceWorker.addEventListener('controllerchange', function() {
+                                if (reloaded) return;
+                                reloaded = true;
+                                window.location.reload();
+                            });
+                            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                            // Filet de sécurité si controllerchange ne vient pas
+                            setTimeout(function() { if (!reloaded) window.location.reload(); }, 1500);
+                        } else {
+                            window.location.reload();
+                        }
                     });
                 }
 
