@@ -1893,6 +1893,16 @@
     padding: 8px 12px;
     font-size: .95rem;
 }
+/* Les <select> natifs ignorent souvent les fonds semi-transparents (Android/iOS) :
+   fond opaque dédié + color-scheme dark pour que le texte reste lisible partout. */
+.weight-box select {
+    background-color: #17261e;
+    color-scheme: dark;
+}
+.weight-box select option {
+    background-color: #17261e;
+    color: var(--hero-text);
+}
 .weight-box input::placeholder { color: rgba(159,225,203,.45); }
 .weight-box small { color: var(--hero-muted); opacity: .8; font-size: .72rem; }
 .weight-box small span { color: var(--hero-accent); font-weight: 600; }
@@ -1904,6 +1914,11 @@
 [data-theme="dark"] .weight-box select {
     background: #1a2620;
     border-color: #2a4038;
+    color: #e8f5f0;
+}
+[data-theme="dark"] .weight-box select,
+[data-theme="dark"] .weight-box select option {
+    background-color: #1a2620;
     color: #e8f5f0;
 }
 
@@ -2443,21 +2458,25 @@ th.effort-col, td.effort-col {
         <label>Poids (kg)</label>
         <input type="number" id="userWeight" placeholder="75" min="30" max="200" step="0.1" onchange="saveUserInfo()">
     </div>
-    <div class="form-group">
-        <label>Référence chrono (course à plat)</label>
-        <select id="userRefDist" onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
-            <option value="">— Aucune —</option>
-            <option value="5">5 km</option>
-            <option value="10">10 km</option>
-            <option value="21.1">Semi-marathon</option>
-            <option value="42.2">Marathon</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label>Temps réalisé</label>
-        <input type="text" id="userRefTime" placeholder="ex : 45:30 ou 1:42:00" maxlength="8" inputmode="numeric"
-               onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
-        <small id="refFeedback" style="display:none;"></small>
+    <div class="form-group ref-perf-group" style="grid-column: 1 / -1;">
+        <label>Référence chrono</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;">
+            <div style="flex:1;min-width:150px;">
+                <select id="userRefDist" onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
+                    <option value="">— Aucune —</option>
+                    <option value="5">5 km</option>
+                    <option value="10">10 km</option>
+                    <option value="21.1">Semi-marathon</option>
+                    <option value="42.2">Marathon</option>
+                </select>
+                <small style="display:block;margin-top:4px;">Course à plat</small>
+            </div>
+            <div style="flex:1;min-width:150px;">
+                <input type="text" id="userRefTime" placeholder="Temps réalisé — ex : 45:30" maxlength="8" inputmode="numeric"
+                       onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
+                <small id="refFeedback" style="display:none;"></small>
+            </div>
+        </div>
     </div>
 </div>
 
