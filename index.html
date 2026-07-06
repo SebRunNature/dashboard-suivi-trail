@@ -204,8 +204,13 @@
             border-right: 1px solid rgba(93,202,165,.1);
             z-index: 200;
             overflow-y: auto;
+            scrollbar-width: none;      /* Firefox : pas d'ascenseur visible */
             flex-shrink: 0;
         }
+        #sidebar::-webkit-scrollbar { display: none; } /* Chrome/Safari/WebView */
+
+        /* Icônes des labels du récapitulatif (remplacement des emojis) */
+        .ric { width: .95em; height: .95em; vertical-align: -0.12em; opacity: .75; margin-right: 2px; }
 
         #sidebar .sb-logo {
             display: flex;
@@ -2416,10 +2421,6 @@ th.effort-col, td.effort-col {
             <svg id="sbThemeIcon" viewBox="0 0 24 24"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/></svg>
             <span id="sbThemeLabel">Mode sombre</span>
         </button>
-        <button class="sb-item" onclick="sbScrollTo('coachSection'); setTimeout(showCoachOptIn, 400); sidebarClose()" style="margin-top:4px">
-            <svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15l8.15-8.15"/><path d="M16 5l3 3M14 7l3 3"/></svg>
-            Clé API Coach IA
-        </button>
     </div>
 </nav>
 
@@ -2678,7 +2679,7 @@ th.effort-col, td.effort-col {
 <div class="main">
 
     <!-- TABLE -->
-    <div class="table-card">
+    <div class="table-card" id="seancesSection">
         <div class="table-header">
             <h2><svg class="ic"><use href="#i-list"/></svg> Journal des séances</h2>
             <div class="table-actions">
@@ -2775,61 +2776,61 @@ th.effort-col, td.effort-col {
 
     <!-- RECAP -->
     <div class="recap-card">
-        <h2>📊 Récapitulatif Global</h2>
+        <h2><svg class="ic"><use href="#i-chart"/></svg> Récapitulatif global</h2>
         <div class="recap-grid">
             <div class="recap-item" id="r-card-course" style="display:none">
-                <div class="recap-item-label">🏃 Course</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-run"/></svg> Course</div>
                 <div class="recap-item-value" id="r-km">0 km</div>
                 <div class="recap-item-sub" id="r-dplus">D+ 0 m</div>
             </div>
             <div class="recap-item" id="r-card-marche" style="display:none">
-                <div class="recap-item-label">🚶 Marche</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-walk"/></svg> Marche</div>
                 <div class="recap-item-value" id="r-marche-km">0 km</div>
                 <div class="recap-item-sub" id="r-marche-dplus">D+ 0 m</div>
             </div>
             <div class="recap-item" id="r-card-speed" style="display:none">
-                <div class="recap-item-label">⚡ Vitesse moy. Course</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-bolt"/></svg> Vitesse moy. course</div>
                 <div class="recap-item-value" id="r-speed">–</div>
                 <div class="recap-item-sub" id="r-pace">– min/km</div>
             </div>
             <div class="recap-item" id="r-card-velo" style="display:none">
-                <div class="recap-item-label">🚴 Vélo Home Trainer</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-bike"/></svg> Vélo home trainer</div>
                 <div class="recap-item-value" id="r-velo">0 h</div>
                 <div class="recap-item-sub">Heures d'effort</div>
             </div>
             <div class="recap-item" id="r-card-renfo" style="display:none">
-                <div class="recap-item-label">💪 Renforcement</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-barbell"/></svg> Renforcement</div>
                 <div class="recap-item-value" id="r-renfo">0 h</div>
                 <div class="recap-item-sub">Heures de travail</div>
             </div>
             <div class="recap-item" id="r-card-elliptique" style="display:none">
-                <div class="recap-item-label">〰️ Elliptique</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-wave"/></svg> Elliptique</div>
                 <div class="recap-item-value" id="r-elliptique">0 h</div>
                 <div class="recap-item-sub">Heures d'effort</div>
             </div>
             <div class="recap-item" id="r-card-rameur" style="display:none">
-                <div class="recap-item-label">🚣 Rameur</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-rowing"/></svg> Rameur</div>
                 <div class="recap-item-value" id="r-rameur">0 h</div>
                 <div class="recap-item-sub">Heures d'effort</div>
             </div>
             <div class="recap-item" id="r-card-tapis" style="display:none">
-                <div class="recap-item-label">🏃‍♂️ Tapis de course</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-run"/></svg> Tapis de course</div>
                 <div class="recap-item-value" id="r-tapis-km">0 km</div>
                 <div class="recap-item-sub" id="r-tapis-dur">0 h</div>
             </div>
             <div class="recap-item" id="r-card-count" style="display:none">
-                <div class="recap-item-label">⚡ Total séances</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-list"/></svg> Total séances</div>
                 <div class="recap-item-value" id="r-count">0</div>
                 <div class="recap-item-sub" id="r-rpe">RPE moyen –</div>
             </div>
             <div class="recap-item" id="r-card-bpm" style="display:none">
-                <div class="recap-item-label">💓 BPM moyen</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-heart"/></svg> BPM moyen</div>
                 <div class="recap-item-value" id="r-bpm">–</div>
                 <div class="recap-item-sub">Fréquence cardiaque</div>
             </div>
             <!-- CASE RPE MOYENNE COLORÉE -->
             <div class="recap-item" id="rpeScoreCard" style="display:none">
-                <div class="recap-item-label">⚡ Moyenne RPE — Règle 80/20</div>
+                <div class="recap-item-label"><svg class="ic ric"><use href="#i-bolt"/></svg> Moyenne RPE — règle 80/20</div>
                 <div class="recap-item-value" id="rpeScoreValue">–</div>
                 <div id="rpeBadge"></div>
             </div>
@@ -2838,7 +2839,7 @@ th.effort-col, td.effort-col {
         <!-- ACCORDÉON RPE 80/20 -->
         <div class="rpe-accordion">
             <button class="rpe-accordion-btn" id="rpeAccordionBtn" onclick="toggleRpeAccordion()">
-                <span>💡 Comprendre le RPE et la règle 80/20</span>
+                <span><svg class="ic ric"><use href="#i-bulb"/></svg> Comprendre le RPE et la règle 80/20</span>
                 <span class="rpe-accordion-arrow">▼</span>
             </button>
             <div class="rpe-accordion-body" id="rpeAccordionBody">
@@ -2887,9 +2888,9 @@ th.effort-col, td.effort-col {
 
                 <!-- Légende couleurs -->
                 <div style="margin-top:14px;font-size:.8rem;color:rgba(255,255,255,.75);display:flex;flex-direction:column;gap:6px;">
-                    <div><span class="rpe-dot" style="background:#2d9e72"></span><strong style="color:var(--green-bright)">RPE moyen 3–5</strong> — Bonne répartition EF, tu respectes la règle 80/20 🟢</div>
-                    <div><span class="rpe-dot" style="background:#e8a020"></span><strong style="color:#fde08a">RPE moyen 5–6.5</strong> — Zone grise, attention à ne pas trop charger 🟡</div>
-                    <div><span class="rpe-dot" style="background:#e05252"></span><strong style="color:#fdb0b0">RPE moyen &gt; 6.5</strong> — Trop intense, risque de surentraînement 🔴</div>
+                    <div><span class="rpe-dot" style="background:#2d9e72"></span><strong style="color:var(--green-bright)">RPE moyen 3–5</strong> — Bonne répartition EF, tu respectes la règle 80/20</div>
+                    <div><span class="rpe-dot" style="background:#e8a020"></span><strong style="color:#fde08a">RPE moyen 5–6.5</strong> — Zone grise, attention à ne pas trop charger</div>
+                    <div><span class="rpe-dot" style="background:#e05252"></span><strong style="color:#fdb0b0">RPE moyen &gt; 6.5</strong> — Trop intense, risque de surentraînement</div>
                 </div>
 
             </div>
@@ -2898,7 +2899,7 @@ th.effort-col, td.effort-col {
         <!-- READINESS BANNER -->
         <div class="readiness-wrap" id="readinessWrap" style="display:none">
             <div class="readiness-banner none" id="readinessBanner">
-                <div class="rb-icon" id="rbIcon">📊</div>
+                <div class="rb-icon" id="rbIcon"><svg class="ic"><use href="#i-chart"/></svg></div>
                 <div class="rb-body">
                     <div class="rb-title" id="rbTitle">–</div>
                     <div class="rb-sub" id="rbSub">–</div>
@@ -3975,14 +3976,21 @@ function renderAll() {
 ═══════════════════════════════════════════════ */
 function estimateVO2max(entries) {
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 120);
-    // Efforts exploitables : course/trail, ≥3 km, entre 10 min et 2h30
+    // Efforts exploitables : course/trail/tapis, ≥3 km, entre 10 min et 2h30
     // (la formule est calibrée pour des efforts soutenus, pas des ultras ni des sprints)
-    const refs = (entries || []).filter(e =>
+    const all = (entries || []).filter(e =>
         ['Course','Trail','Tapis de course'].includes(e.type) &&
         Number(e.km) >= 3 && Number(e.minutes) >= 10 && Number(e.minutes) <= 150 &&
         new Date(e.date + 'T12:00:00') >= cutoff
     );
-    if (!refs.length) return null;
+    if (!all.length) return null;
+
+    // Calibrage : la formule suppose un effort MAXIMAL sur la durée.
+    // Les footings faciles sous-estiment la VO₂max → on privilégie les
+    // séances soutenues (RPE ≥ 7) quand elles existent.
+    const hard = all.filter(e => Number(e.rpe) >= 7);
+    const refs = hard.length ? hard : all;
+    const soutenu = hard.length > 0;
 
     let best = null;
     refs.forEach(e => {
@@ -3999,7 +4007,32 @@ function estimateVO2max(entries) {
     });
     if (!best || best.vdot < 15 || best.vdot > 90) return null; // valeurs physiologiquement plausibles
     best.vdot = Math.round(best.vdot);
+    best.soutenu = soutenu; // false = estimation plancher (aucun effort soutenu récent)
+
+    // Classement selon les normes âge/sexe (barèmes type ACSM)
+    const age   = parseInt(localStorage.getItem('userAge')) || null;
+    const genre = localStorage.getItem('userGender') || 'H';
+    best.rating = vo2Rating(best.vdot, age, genre);
+    best.age = age; best.genre = genre;
     return best;
+}
+
+/* Classement de la VO₂max selon l'âge et le sexe (barèmes type ACSM, ml/kg/min).
+   Retourne null si l'âge n'est pas renseigné. */
+function vo2Rating(vdot, age, genre) {
+    if (!age) return null;
+    // Seuils [excellent, très bon, bon, moyen] par tranche d'âge
+    const NORMES = {
+        H: [ [29,[53,47,43,37]], [39,[51,45,41,35]], [49,[48,43,38,33]], [59,[45,39,35,30]], [999,[41,36,31,26]] ],
+        F: [ [29,[47,42,38,33]], [39,[45,40,34,31]], [49,[43,37,32,28]], [59,[38,33,28,25]], [999,[35,30,25,22]] ]
+    };
+    const rows = NORMES[genre === 'F' ? 'F' : 'H'];
+    const seuils = (rows.find(r => age <= r[0]) || rows[rows.length-1])[1];
+    if (vdot >= seuils[0]) return 'Excellent';
+    if (vdot >= seuils[1]) return 'Très bon';
+    if (vdot >= seuils[2]) return 'Bon';
+    if (vdot >= seuils[3]) return 'Moyen';
+    return 'À développer';
 }
 
 function renderRecords(entries) {
@@ -4052,8 +4085,11 @@ function renderRecords(entries) {
     const vdot = estimateVO2max(entries);
 
     const chips = [
-        vdot ? { icon: 'heart', label: 'VO₂max estimée', value: `≈ ${vdot.vdot} ml/kg/min`,
-                 date: `${vdot.refKm} km · ${fmtDate(vdot.refDate)}` } : null,
+        vdot ? { icon: 'heart', label: vdot.soutenu ? 'VO₂max estimée' : 'VO₂max estimée (min.)',
+                 value: `≈ ${vdot.vdot} ml/kg/min`,
+                 date: vdot.rating
+                     ? `${vdot.rating} · ${vdot.age} ans (${vdot.genre}) · réf. ${vdot.refKm} km`
+                     : `réf. ${vdot.refKm} km · ${fmtDate(vdot.refDate)}` } : null,
         { icon: 'ruler',    label: 'Plus longue sortie', value: `${Number(longest.km).toFixed(1)} km`, date: fmtDate(longest.date) },
         fastest      ? { icon: 'bolt',     label: 'Meilleure vitesse', value: `${speedOf(fastest).toFixed(1)} km/h`, date: `${Number(fastest.km).toFixed(1)} km · ${fmtDate(fastest.date)}` } : null,
         biggestDplus ? { icon: 'mountain', label: 'Plus gros D+', value: `${Math.round(Number(biggestDplus.dplus))} m`, date: fmtDate(biggestDplus.date) } : null,
@@ -4466,20 +4502,20 @@ function renderRpeScore(avgRpe) {
     let level, label, icon;
     if (rpe <= 5) {
         level = 'green';
-        label = 'Bonne répartition 80/20 🟢';
-        icon  = '✅';
+        label = 'Bonne répartition 80/20';
+        icon  = 'check';
     } else if (rpe <= 6.5) {
         level = 'orange';
-        label = 'Zone grise — attention 🟡';
-        icon  = '⚠️';
+        label = 'Zone grise — attention';
+        icon  = 'alert';
     } else {
         level = 'red';
-        label = 'Trop intense — risque surentraînement 🔴';
-        icon  = '🚨';
+        label = 'Trop intense — risque de surentraînement';
+        icon  = 'alert';
     }
 
     card.className = `recap-item rpe-${level}`;
-    badge.innerHTML = `<div class="rpe-badge ${level}">${icon} ${label}</div>`;
+    badge.innerHTML = `<div class="rpe-badge ${level}"><svg class="ic ric"><use href="#i-${icon}"/></svg> ${label}</div>`;
 }
 
 function toggleRpeAccordion() {
@@ -5913,8 +5949,13 @@ function buildCoachContext() {
             age: age || null,
             taille: taille ? taille+'cm' : null,
             categorie,
-            vo2maxEstimee: (typeof estimateVO2max === 'function' && estimateVO2max(entries))
-                ? estimateVO2max(entries).vdot + ' ml/kg/min (VDOT estimé)' : null
+            vo2maxEstimee: (function() {
+                if (typeof estimateVO2max !== 'function') return null;
+                const v = estimateVO2max(entries);
+                if (!v) return null;
+                return v.vdot + ' ml/kg/min (VDOT estimé' + (v.soutenu ? '' : ' — plancher, aucun effort soutenu récent')
+                    + (v.rating ? ' — niveau ' + v.rating + ' pour âge/sexe' : '') + ')';
+            })()
         },
         objectif: goal ? {
             nom: goal.name || 'Non défini',
@@ -6845,7 +6886,7 @@ function renderReadiness() {
     var isPerf = goal.goal === 'perf';
     var genre  = localStorage.getItem('userGender') || 'H';
     var plan   = TRAIL_DATA.getPlan(goal.dist, goal.goal || 'finisher', genre, goal.dplus || 0);
-    var objLabel = isPerf ? '⚡ Performance' : '🏅 Finisher';
+    var objLabel = isPerf ? 'Performance' : 'Finisher';
 
     // Seuils dynamiques selon objectif
     var kmMinTarget = plan.kmMin;
@@ -6861,7 +6902,7 @@ function renderReadiness() {
     var entries = getEntries();
     if (!entries.length) {
         banner.className = 'readiness-banner none';
-        rbIcon.textContent  = '📊';
+        rbIcon.innerHTML  = '<svg class="ic"><use href="#i-chart"/></svg>';
         rbTitle.textContent = 'Pas encore de donnees';
         rbSub.textContent   = 'Commence a enregistrer tes seances pour evaluer ta preparation.';
         rbCrit.innerHTML    = ''; return;
@@ -6896,29 +6937,29 @@ function renderReadiness() {
 
     var level, icon, title, sub;
     if (total >= 5) {
-        level='green'; icon='🟢';
+        level='green'; icon='check';
         title = isPerf
-            ? 'Tu es en forme pour viser un chrono ! Continue 💪'
-            : 'Tu es pret pour terminer ' + goal.name + ' ! 💪';
+            ? 'Tu es en forme pour viser un chrono. Continue !'
+            : 'Tu es prêt pour terminer ' + goal.name + ' !';
         sub = isPerf
             ? 'Ton volume est au niveau Performance. Maintiens le rythme, soigne la recuperation et affine ton allure objectif.'
             : 'Ton volume est suffisant pour terminer ' + goal.name + ' dans de bonnes conditions. Soigne ta recuperation.';
     } else if (total >= 3) {
-        level='orange'; icon='🟡';
-        title = 'Ton entrainement porte ses fruits — continue a pousser ! 🔥';
+        level='orange'; icon='alert';
+        title = 'Ton entraînement porte ses fruits — continue à pousser !';
         sub = isPerf
             ? 'Tu progresses vers un objectif chrono pour ' + goal.name + '. Augmente le volume sur les criteres en orange.'
             : 'Tu es sur la bonne voie pour finir ' + goal.name + '. Continue progressivement.';
     } else {
-        level='red'; icon='🔴';
-        title = 'Pas encore pret — augmente le volume progressivement 📈';
+        level='red'; icon='alert';
+        title = 'Pas encore prêt — augmente le volume progressivement';
         sub = isPerf
             ? 'Pour viser un chrono sur ' + goal.name + ', le volume hebdo doit encore progresser. Commence par viser le Finisher.'
             : 'Pour terminer ' + goal.name + ', augmente ton volume de 10% maximum par semaine.';
     }
 
     banner.className = 'readiness-banner ' + level;
-    rbIcon.textContent  = icon;
+    rbIcon.innerHTML  = `<svg class="ic"><use href="#i-${icon}"/></svg>`;
     rbTitle.textContent = title;
     rbSub.textContent   = sub;
 
