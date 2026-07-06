@@ -2461,8 +2461,8 @@ th.effort-col, td.effort-col {
     <div class="form-group ref-perf-group" style="grid-column: 1 / -1;">
         <label>Référence chrono</label>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;">
-            <div style="flex:1;min-width:150px;">
-                <select id="userRefDist" onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
+            <div style="flex:1 1 150px;min-width:0;">
+                <select id="userRefDist" style="width:100%;box-sizing:border-box;" onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
                     <option value="">— Aucune —</option>
                     <option value="5">5 km</option>
                     <option value="10">10 km</option>
@@ -2471,10 +2471,12 @@ th.effort-col, td.effort-col {
                 </select>
                 <small style="display:block;margin-top:4px;">Course à plat</small>
             </div>
-            <div style="flex:1;min-width:150px;">
-                <input type="text" id="userRefTime" placeholder="Temps réalisé — ex : 45:30" maxlength="8" inputmode="numeric"
-                       onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
+            <div style="flex:1 1 150px;min-width:0;">
+                <input type="text" id="userRefTime" placeholder="Temps — ex : 45:30" maxlength="8" inputmode="numeric"
+                       style="width:100%;box-sizing:border-box;"
+                       onchange="normalizeRefTimeInput(this); saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
                 <small id="refFeedback" style="display:none;"></small>
+                <small style="display:block;margin-top:2px;opacity:.7;">Tape juste les chiffres : 4530 → 45:30</small>
             </div>
         </div>
     </div>
@@ -7454,6 +7456,22 @@ function updateAgeCategory() {
    VMA = vVO₂max : vitesse v telle que VO₂(v) = VDOT
    → résolution de 0.000104·v² + 0.182258·v − (4.6 + VDOT) = 0  (v en m/min)
 ═══════════════════════════════════════════════ */
+/* Sur mobile, le pavé numérique (inputmode) n'a pas de touche ":" :
+   l'utilisateur tape les chiffres bruts et on insère les deux-points.
+   4530 → 45:30 · 830 → 8:30 · 14200 → 1:42:00 · 130500 → 13:05:00 */
+function normalizeRefTimeInput(el) {
+    if (!el) return;
+    let v = el.value.trim();
+    if (!v || v.includes(':')) return;              // déjà formaté (ou vide)
+    const digits = v.replace(/\D/g, '');
+    if (!digits) { el.value = ''; return; }
+    let out = digits;
+    if (digits.length <= 2)      out = digits;                                        // minutes seules
+    else if (digits.length <= 4) out = digits.slice(0, -2) + ':' + digits.slice(-2);  // mm:ss
+    else if (digits.length <= 6) out = digits.slice(0, -4) + ':' + digits.slice(-4, -2) + ':' + digits.slice(-2); // h:mm:ss
+    el.value = out;
+}
+
 function parseRefTime(str) {
     if (!str) return null;
     const parts = String(str).trim().split(':').map(Number);
