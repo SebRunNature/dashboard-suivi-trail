@@ -2443,6 +2443,22 @@ th.effort-col, td.effort-col {
         <label>Poids (kg)</label>
         <input type="number" id="userWeight" placeholder="75" min="30" max="200" step="0.1" onchange="saveUserInfo()">
     </div>
+    <div class="form-group">
+        <label>Référence chrono (course à plat)</label>
+        <select id="userRefDist" onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
+            <option value="">— Aucune —</option>
+            <option value="5">5 km</option>
+            <option value="10">10 km</option>
+            <option value="21.1">Semi-marathon</option>
+            <option value="42.2">Marathon</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Temps réalisé</label>
+        <input type="text" id="userRefTime" placeholder="ex : 45:30 ou 1:42:00" maxlength="8" inputmode="numeric"
+               onchange="saveUserInfo(); updateRefFeedback(); if(typeof renderTrainingPaces==='function'){renderTrainingPaces();} if(typeof renderRecords==='function'){renderRecords(getEntries());}">
+        <small id="refFeedback" style="display:none;"></small>
+    </div>
 </div>
 
         <!-- TRAIL OBJECTIF -->
@@ -2555,6 +2571,9 @@ th.effort-col, td.effort-col {
     <div class="records-title"><svg class="ic"><use href="#i-trophy"/></svg> Records personnels</div>
     <div class="records-grid" id="recordsGrid"></div>
 </div>
+
+<!-- ── [HTML] ALLURES D'ENTRAÎNEMENT (rendu par renderTrainingPaces) ── -->
+<div id="trainingPacesCard" style="display:none;margin:14px 0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;"></div>
 
 <!-- ── [HTML] BACKUP REMINDER BANNER ─────────────────────── -->
 <div class="backup-banner" id="backupBanner" style="display:none">
@@ -2816,6 +2835,7 @@ th.effort-col, td.effort-col {
         </div>
 
         <!-- Panel résultat -->
+        <div id="coachAdherence" style="display:none;margin:0 0 12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;"></div>
         <div class="coach-result" id="coachResult" style="display:none">
             <div class="coach-cards-grid" id="coachCards"></div>
             <div class="coach-plan-title">📅 Plan suggéré — semaine prochaine</div>
@@ -3754,6 +3774,7 @@ function renderAll() {
     renderWeekView(entries);
     renderChargeIndicator(entries);
     renderChronoPredictor();   // le chrono estimé dépend des séances
+    renderTrainingPaces();     // allures Daniels (VDOT)
     renderPeriodization();     // et la frise de la date du jour
     renderWeeklyChart(entries);
     applyFilters(); // handles renderTable with filters
@@ -3771,6 +3792,21 @@ function renderAll() {
    Synergie Montre de Vie : la VO₂max est l'un des meilleurs marqueurs de l'âge biologique.
 ═══════════════════════════════════════════════ */
 function estimateVO2max(entries) {
+    // ── Priorité 1 : chrono de référence déclaré (effort max en course — le plus fiable)
+    const ref = (typeof getRefPerf === 'function') ? getRefPerf() : null;
+    if (ref) {
+        const v = vdotFromPerf(ref.dist, ref.minutes);
+        if (v) {
+            const age   = parseInt(localStorage.getItem('userAge')) || null;
+            const genre = localStorage.getItem('userGender') || 'H';
+            return {
+                vdot: Math.round(v), vma: vmaFromVdot(v),
+                source: 'ref', refKm: ref.dist.toFixed(1), refDate: null,
+                soutenu: true, rating: vo2Rating(Math.round(v), age, genre), age, genre
+            };
+        }
+    }
+    // ── Priorité 2 : déduction depuis les séances des 120 derniers jours
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 120);
     // Efforts exploitables : course/trail/tapis, ≥3 km, entre 10 min et 2h30
     // (la formule est calibrée pour des efforts soutenus, pas des ultras ni des sprints)
@@ -3803,6 +3839,8 @@ function estimateVO2max(entries) {
     });
     if (!best || best.vdot < 15 || best.vdot > 90) return null; // valeurs physiologiquement plausibles
     best.vdot = Math.round(best.vdot);
+    best.vma = vmaFromVdot(best.vdot);
+    best.source = 'seances';
     best.soutenu = soutenu; // false = estimation plancher (aucun effort soutenu récent)
 
     // Classement selon les normes âge/sexe (barèmes type ACSM)
@@ -3883,9 +3921,11 @@ function renderRecords(entries) {
     const chips = [
         vdot ? { icon: 'heart', label: vdot.soutenu ? 'VO₂max estimée' : 'VO₂max estimée (min.)',
                  value: `≈ ${vdot.vdot} ml/kg/min`,
-                 date: vdot.rating
-                     ? `${vdot.rating} · ${vdot.age} ans (${vdot.genre}) · réf. ${vdot.refKm} km`
-                     : `réf. ${vdot.refKm} km · ${fmtDate(vdot.refDate)}` } : null,
+                 date: [
+                     vdot.rating ? `${vdot.rating} · ${vdot.age} ans (${vdot.genre})` : null,
+                     `VMA ≈ ${vdot.vma.toFixed(1)} km/h`,
+                     vdot.source === 'ref' ? `réf. chrono ${vdot.refKm} km` : `réf. séance ${vdot.refKm} km`
+                 ].filter(Boolean).join(' · ') } : null,
         { icon: 'ruler',    label: 'Plus longue sortie', value: `${Number(longest.km).toFixed(1)} km`, date: fmtDate(longest.date) },
         fastest      ? { icon: 'bolt',     label: 'Meilleure vitesse', value: `${speedOf(fastest).toFixed(1)} km/h`, date: `${Number(fastest.km).toFixed(1)} km · ${fmtDate(fastest.date)}` } : null,
         biggestDplus ? { icon: 'mountain', label: 'Plus gros D+', value: `${Math.round(Number(biggestDplus.dplus))} m`, date: fmtDate(biggestDplus.date) } : null,
@@ -3906,7 +3946,7 @@ function renderRecords(entries) {
    [JS:FILTERS] FILTERS & SORT
 ═══════════════════════════════════════════════ */
 
-const ROWS_DEFAULT = 50; // séances affichées par défaut
+const ROWS_DEFAULT = 30; // séances affichées par défaut (~1 mois d'activité)
 let   _showAll     = false; // true quand l'utilisateur clique "Voir tout"
 
 function applyFilters() {
@@ -4459,7 +4499,9 @@ function buildBackupObject(info) {
             age:    localStorage.getItem('userAge')    || '',
             height: localStorage.getItem('userHeight') || '',
             weight: localStorage.getItem('userWeight') || '',
-            prenom: localStorage.getItem('userPrenom') || ''
+            prenom: localStorage.getItem('userPrenom') || '',
+            refDist: localStorage.getItem('userRefDist') || '',
+            refTime: localStorage.getItem('userRefTime') || ''
         }
     };
 }
@@ -4542,6 +4584,8 @@ function importFullBackup(e) {
                 if (ui.height) localStorage.setItem('userHeight', ui.height);
                 if (ui.weight) localStorage.setItem('userWeight', ui.weight);
                 if (ui.prenom) localStorage.setItem('userPrenom', ui.prenom);
+                if (ui.refDist) localStorage.setItem('userRefDist', ui.refDist);
+                if (ui.refTime) localStorage.setItem('userRefTime', ui.refTime);
                 // Mettre à jour les champs visibles dans la page
                 if (typeof loadUserInfo === 'function') loadUserInfo();
                 if (typeof updateAgeCategory === 'function') updateAgeCategory();
@@ -5678,8 +5722,10 @@ function buildCoachContext() {
                 if (typeof estimateVO2max !== 'function') return null;
                 const v = estimateVO2max(entries);
                 if (!v) return null;
-                return v.vdot + ' ml/kg/min (VDOT estimé' + (v.soutenu ? '' : ' — plancher, aucun effort soutenu récent')
-                    + (v.rating ? ' — niveau ' + v.rating + ' pour âge/sexe' : '') + ')';
+                return v.vdot + ' ml/kg/min (VDOT ' + (v.source === 'ref' ? 'depuis chrono déclaré ' + v.refKm + ' km — fiable' : 'estimé depuis les séances')
+                    + (v.soutenu ? '' : ' — plancher, aucun effort soutenu récent')
+                    + (v.rating ? ' — niveau ' + v.rating + ' pour âge/sexe' : '')
+                    + ') — VMA ≈ ' + v.vma.toFixed(1) + ' km/h';
             })()
         },
         objectif: goal ? {
@@ -5711,9 +5757,60 @@ function buildCoachContext() {
         dateJour
     };
 
+    // ── Point 1 : suivi du plan précédent (prévu vs réalisé) ──────────
+    ctx.suiviPlan = computePlanAdherence(entries);
+
     // Calculer les alertes intelligentes après avoir construit le contexte
     ctx.alerts = buildAlerts(ctx);
     return ctx;
+}
+
+/* ═══════════════════════════════════════════════
+   [JS:ADHERENCE] PRÉVU vs RÉALISÉ
+   Compare le dernier plan généré par le Coach IA aux séances réellement
+   saisies depuis — c'est ce qui rend le coach ADAPTATIF d'une analyse
+   à l'autre (le nouveau plan tient compte de ce qui a vraiment été fait).
+═══════════════════════════════════════════════ */
+function computePlanAdherence(entries) {
+    try {
+        const lastRun = localStorage.getItem('coachLastRun');
+        const lastRes = JSON.parse(localStorage.getItem('coachLastResult') || 'null');
+        if (!lastRun || !lastRes || !Array.isArray(lastRes.plan)) return null;
+
+        const genDate = new Date(lastRun);
+        const now = new Date();
+        const daysSince = Math.floor((now - genDate) / 86400000);
+        if (daysSince < 3) return null;  // pas assez de recul pour comparer
+        const windowEnd = new Date(Math.min(now.getTime(), genDate.getTime() + 7 * 86400000));
+
+        // ── PRÉVU : séances du plan hors repos + km annoncés dans les détails
+        const isRepos = d => (d.couleur === '#888') ||
+            /repos|off|récup(?:ération)? complète/i.test((d.seance || '') + ' ' + (d.detail || ''));
+        const active = lastRes.plan.filter(d => !isRepos(d));
+        let kmPrevus = 0;
+        active.forEach(d => {
+            const m = ((d.seance || '') + ' ' + (d.detail || '')).match(/(\d+(?:[.,]\d+)?)\s*km/i);
+            if (m) kmPrevus += parseFloat(m[1].replace(',', '.'));
+        });
+
+        // ── RÉALISÉ : séances saisies dans la fenêtre du plan
+        const done = (entries || []).filter(e => {
+            const dt = new Date(e.date + 'T12:00:00');
+            return dt >= genDate && dt <= windowEnd;
+        });
+        const kmFaits = done.filter(e => ['Course','Trail','Tapis de course'].includes(e.type))
+                            .reduce((s, e) => s + (Number(e.km) || 0), 0);
+
+        return {
+            dateGeneration: lastRun.slice(0, 10),
+            joursEcoules: Math.min(daysSince, 7),
+            fenetreComplete: daysSince >= 7,
+            seancesPrevues: active.length,
+            kmPrevus: kmPrevus > 0 ? Math.round(kmPrevus) : null,
+            seancesFaites: done.length,
+            kmFaits: Math.round(kmFaits)
+        };
+    } catch (e) { return null; }
 }
 
 /* ─────────────────────────────────────────
@@ -5932,6 +6029,21 @@ CONTEXTE TRAIL CLASSIQUE :
         ? `\nALERTES INTELLIGENTES (contextualisées à l'objectif "${al.phase}") :\n${alertesLines.join('\n')}`
         : `\nPAS D'ALERTE DÉTECTÉE — profil de charge cohérent avec la phase "${al.phase}".`;
 
+    // ── Point 1 : suivi prévu vs réalisé du plan précédent
+    let suiviTxt = '';
+    const sp = ctx.suiviPlan;
+    if (sp) {
+        suiviTxt = `\nSUIVI DU PLAN PRÉCÉDENT (généré le ${sp.dateGeneration}${sp.fenetreComplete ? '' : ', ' + sp.joursEcoules + ' j écoulés sur 7'}) : prévu ${sp.seancesPrevues} séances${sp.kmPrevus ? ' (~' + sp.kmPrevus + ' km annoncés)' : ''} — réalisé ${sp.seancesFaites} séances (${sp.kmFaits} km course/trail). ADAPTE le nouveau plan à cet écart : si sous-réalisé, ne rattrape PAS le volume manqué (reprends progressivement) ; si sur-réalisé, surveille la charge.`;
+    }
+
+    // ── Allures cibles Daniels (si VDOT dispo) — le coach doit les utiliser
+    let alluresTxt = '';
+    if (ctx.utilisateur.vo2maxEstimee && typeof trainingPaces === 'function') {
+        const vNum = parseInt(ctx.utilisateur.vo2maxEstimee);
+        const p = trainingPaces(vNum);
+        if (p) alluresTxt = `\nALLURES CIBLES (Daniels, VDOT ${p.vdot}, sur plat) : EF ${p.E.pace} · Marathon ${p.M.pace} · Seuil ${p.T.pace} · VMA ${p.I.pace} · Répétitions ${p.R.pace}. UTILISE CES ALLURES dans les détails du plan (en trail, convertis en effort équivalent RPE/cardio pour les portions vallonnées).`;
+    }
+
     // ── Phase de périodisation explicite (synchronisée avec la frise UI)
     const phaseTxt = ctx.objectif && ctx.objectif.semainesRestantes !== null
         ? `\nPHASE DE PÉRIODISATION ACTUELLE : "${al.phase}" — ${ctx.objectif.semainesRestantes} semaine(s) avant ${ctx.objectif.nom}. Calibre le plan sur cette phase (build = volume progressif, spécifique = D+ et sorties longues ciblées course, affûtage = réduction du volume en conservant un peu d'intensité).`
@@ -5940,7 +6052,7 @@ CONTEXTE TRAIL CLASSIQUE :
     // ── Le prompt retourné ne contient QUE les données (le system est séparé dans l'appel API)
     return `DONNÉES ATHLÈTE — ${ctx.dateJour}
 
-PROFIL : ${profilTxt}
+PROFIL : ${profilTxt}${alluresTxt}
 ${goalTxt}${phaseTxt}
 Total séances enregistrées : ${ctx.totalSeances}
 
@@ -5948,6 +6060,7 @@ ${chargeTxt}${alerteFatigueTxt}
 
 4 DERNIÈRES SEMAINES :
 ${weeksTxt}
+${suiviTxt}
 ${directivesObjectif}
 ${alertesTxt}
 
@@ -5991,6 +6104,26 @@ RÈGLES :
   3. Risque détecté → alerte claire
   4. Phase vis-à-vis de l'objectif : build, affûtage ou récupération ?
   5. Si moins de 2 semaines de données : reste prudent, pas de séances dures`;
+}
+
+function renderCoachAdherence() {
+    const box = document.getElementById('coachAdherence');
+    if (!box) return;
+    const sp = computePlanAdherence(getEntries());
+    if (!sp) { box.style.display = 'none'; return; }
+    const pct = sp.seancesPrevues > 0 ? Math.round(sp.seancesFaites / sp.seancesPrevues * 100) : null;
+    const tone = pct === null ? 'var(--muted)'
+        : pct >= 80 ? 'var(--green-dk)' : pct >= 50 ? '#b07a10' : '#c04545';
+    box.style.display = 'block';
+    box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;">
+            <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">Suivi du plan du ${sp.dateGeneration}</span>
+            ${pct !== null ? `<span style="font-weight:800;color:${tone};">${pct} %</span>` : ''}
+        </div>
+        <div style="font-size:.85rem;margin-top:4px;">
+            <strong>${sp.seancesFaites}/${sp.seancesPrevues}</strong> séances réalisées${sp.kmPrevus ? ` · <strong>${sp.kmFaits}/${sp.kmPrevus}</strong> km` : ` · ${sp.kmFaits} km course/trail`}${sp.fenetreComplete ? '' : ` <span style="color:var(--muted);">(${sp.joursEcoules} j / 7)</span>`}
+        </div>
+        <div style="font-size:.7rem;color:var(--muted);margin-top:3px;">Ta prochaine analyse coach en tiendra compte automatiquement.</div>`;
 }
 
 function renderCoachResult(data) {
@@ -6311,6 +6444,7 @@ function showCoachOptIn() {
 }
 
 function initCoach() {
+    if (typeof renderCoachAdherence === 'function') renderCoachAdherence();
     const entries = getEntries();
     if (!entries.length) return; // pas de données = pas de coach
 
@@ -7281,6 +7415,130 @@ function updateAgeCategory() {
 ───────────────────────────────────────── */
 
 // Sauvegarde / chargement des infos utilisateur
+/* ═══════════════════════════════════════════════
+   [JS:REF] RÉFÉRENCE CHRONO → VDOT & VMA
+   Le chrono déclaré (5/10/semi/marathon, effort max sur plat) est la
+   référence la plus fiable pour le VDOT — plus que les séances d'entraînement.
+   VMA = vVO₂max : vitesse v telle que VO₂(v) = VDOT
+   → résolution de 0.000104·v² + 0.182258·v − (4.6 + VDOT) = 0  (v en m/min)
+═══════════════════════════════════════════════ */
+function parseRefTime(str) {
+    if (!str) return null;
+    const parts = String(str).trim().split(':').map(Number);
+    if (parts.some(isNaN)) return null;
+    let minutes = null;
+    if (parts.length === 3) minutes = parts[0]*60 + parts[1] + parts[2]/60;      // h:mm:ss
+    else if (parts.length === 2) minutes = parts[0] + parts[1]/60;               // mm:ss
+    else if (parts.length === 1) minutes = parts[0];                             // minutes seules
+    return (minutes && minutes >= 10 && minutes <= 420) ? minutes : null;        // 10 min – 7 h
+}
+
+function getRefPerf() {
+    const dist = parseFloat(localStorage.getItem('userRefDist')) || null;
+    const t    = parseRefTime(localStorage.getItem('userRefTime'));
+    if (!dist || !t) return null;
+    // Cohérence : allure entre 3 et 12 min/km (protège des fautes de frappe)
+    const paceMinKm = t / dist;
+    if (paceMinKm < 3 || paceMinKm > 12) return null;
+    return { dist, minutes: t };
+}
+
+function vdotFromPerf(distKm, minutes) {
+    const v = (distKm * 1000) / minutes; // m/min
+    const vo2 = -4.60 + 0.182258 * v + 0.000104 * v * v;
+    const pct = 0.8 + 0.1894393 * Math.exp(-0.012778 * minutes) + 0.2989558 * Math.exp(-0.1932605 * minutes);
+    const vdot = vo2 / pct;
+    return (vdot >= 15 && vdot <= 90) ? vdot : null;
+}
+
+function vmaFromVdot(vdot) {
+    // Racine positive de 0.000104v² + 0.182258v − (4.6 + vdot) = 0
+    const a = 0.000104, b = 0.182258, cc = -(4.6 + vdot);
+    const v = (-b + Math.sqrt(b*b - 4*a*cc)) / (2*a); // m/min
+    return v * 60 / 1000; // km/h
+}
+
+/* ── Allures d'entraînement Daniels (dérivées du VDOT) ──
+   Chaque zone correspond à un % du VDOT ; on résout la vitesse v telle que
+   VO₂(v) = pct · VDOT, puis allure = 1000/v.
+   E  Endurance fondamentale : 62–72 %   (footings, sorties longues faciles)
+   M  Marathon               : 82 %      (allure spécifique longue)
+   T  Seuil                  : 87 %      (tempo 20–40 min)
+   I  Intervalle / VMA       : 100 %     (fractions 2–5 min)
+   R  Répétitions            : ~106 % de vI (fractions courtes ≤ 90 s)      */
+function velAtPctVdot(vdot, pct) {
+    const a = 0.000104, b = 0.182258, cc = -(4.6 + pct * vdot);
+    return (-b + Math.sqrt(b*b - 4*a*cc)) / (2*a); // m/min
+}
+function paceFmt(vMmin) {
+    const secPerKm = Math.round(60000 / vMmin);
+    const m = Math.floor(secPerKm / 60), s = secPerKm % 60;
+    return `${m}'${String(s).padStart(2,'0')}"`;
+}
+function trainingPaces(vdot) {
+    if (!vdot) return null;
+    const vE1 = velAtPctVdot(vdot, 0.62), vE2 = velAtPctVdot(vdot, 0.72);
+    const vM  = velAtPctVdot(vdot, 0.82);
+    const vT  = velAtPctVdot(vdot, 0.87);
+    const vI  = velAtPctVdot(vdot, 1.00);
+    const vR  = vI * 1.06;
+    return {
+        E: { pace: `${paceFmt(vE2)}–${paceFmt(vE1)}/km`, kmh: `${(vE2*.06).toFixed(1)} km/h`, use: 'Footings, sorties longues, récupération — 80 % de ton volume' },
+        M: { pace: `${paceFmt(vM)}/km`,  kmh: `${(vM*.06).toFixed(1)} km/h`, use: 'Allure marathon / portions soutenues de sortie longue' },
+        T: { pace: `${paceFmt(vT)}/km`,  kmh: `${(vT*.06).toFixed(1)} km/h`, use: 'Seuil — tempo 20 à 40 min, "confortablement difficile"' },
+        I: { pace: `${paceFmt(vI)}/km`,  kmh: `${(vI*.06).toFixed(1)} km/h`, use: 'VMA — fractions de 2 à 5 min (ex. 5×3 min), récup égale' },
+        R: { pace: `${paceFmt(vR)}/km`,  kmh: `${(vR*.06).toFixed(1)} km/h`, use: 'Répétitions courtes ≤ 90 s — économie de course, vitesse' },
+        vdot: Math.round(vdot)
+    };
+}
+
+function renderTrainingPaces() {
+    const box = document.getElementById('trainingPacesCard');
+    if (!box) return;
+    const v = estimateVO2max(getEntries());
+    const p = v ? trainingPaces(v.vdot) : null;
+    if (!p) { box.style.display = 'none'; return; }
+    const src = v.source === 'ref' ? `chrono de référence ${v.refKm} km` : 'estimation séances';
+    const rows = [
+        ['E',  'Endurance fondamentale', p.E],
+        ['M',  'Allure marathon',        p.M],
+        ['T',  'Seuil',                  p.T],
+        ['I',  'VMA / Intervalle',       p.I],
+        ['R',  'Répétitions',            p.R],
+    ].map(([z, name, d]) => `
+        <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+            <span style="flex:0 0 26px;font-family:var(--font-display);font-weight:800;color:var(--green-dk);">${z}</span>
+            <span style="flex:0 0 108px;font-weight:700;white-space:nowrap;">${d.pace}</span>
+            <span style="flex:1;font-size:.76rem;color:var(--muted);">${name} — ${d.use}</span>
+        </div>`).join('');
+    box.style.display = 'block';
+    box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">Allures d'entraînement — méthode Daniels</div>
+            <div style="font-size:.68rem;color:var(--muted);">VDOT ${p.vdot} · ${src}</div>
+        </div>
+        ${rows}
+        <div style="font-size:.7rem;color:var(--muted);margin-top:8px;">Allures sur plat. En trail, raisonne à l'effort équivalent (RPE / cardio) plutôt qu'à l'allure GPS.</div>`;
+}
+
+function updateRefFeedback() {
+    const fb = document.getElementById('refFeedback');
+    if (!fb) return;
+    const ref = getRefPerf();
+    if (!ref) {
+        const rawT = (document.getElementById('userRefTime')?.value || '').trim();
+        const rawD = document.getElementById('userRefDist')?.value || '';
+        if (rawT && rawD) { fb.style.display = 'block'; fb.textContent = 'Format : mm:ss ou h:mm:ss (ex. 45:30, 1:42:00)'; }
+        else fb.style.display = 'none';
+        return;
+    }
+    const vdot = vdotFromPerf(ref.dist, ref.minutes);
+    if (!vdot) { fb.style.display = 'block'; fb.textContent = 'Temps incohérent avec la distance choisie.'; return; }
+    const vma = vmaFromVdot(vdot);
+    fb.style.display = 'block';
+    fb.innerHTML = `VDOT <strong>${Math.round(vdot)}</strong> · VMA ≈ <strong>${vma.toFixed(1)} km/h</strong>`;
+}
+
 function saveUserInfo() {
     const gender = document.getElementById('userGender').value;
     const age    = document.getElementById("userAge") ? document.getElementById("userAge").value : "";
@@ -7293,6 +7551,10 @@ function saveUserInfo() {
     localStorage.setItem('userHeight', height);
     localStorage.setItem('userWeight', weight);
     localStorage.setItem('userPrenom', prenom);
+    const refDist = document.getElementById('userRefDist')?.value || '';
+    const refTime = (document.getElementById('userRefTime')?.value || '').trim();
+    localStorage.setItem('userRefDist', refDist);
+    localStorage.setItem('userRefTime', refTime);
 }
 
 function loadUserInfo() {
@@ -7303,6 +7565,11 @@ function loadUserInfo() {
     if (ageEl) { ageEl.value = localStorage.getItem('userAge') || ''; updateAgeCategory(); }
     const prenomEl = document.getElementById('userPrenom');
     if (prenomEl) prenomEl.value = localStorage.getItem('userPrenom') || '';
+    const refDistEl = document.getElementById('userRefDist');
+    if (refDistEl) refDistEl.value = localStorage.getItem('userRefDist') || '';
+    const refTimeEl = document.getElementById('userRefTime');
+    if (refTimeEl) refTimeEl.value = localStorage.getItem('userRefTime') || '';
+    updateRefFeedback();
     updateGreeting();
 }
 
