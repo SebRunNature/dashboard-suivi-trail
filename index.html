@@ -3843,19 +3843,29 @@ function estimateVO2max(entries) {
     const refs = hard.length ? hard : all;
     const soutenu = hard.length > 0;
 
-    let best = null;
+    // Estimation CONSERVATRICE depuis l'entraînement (une séance n'est pas une course) :
+    //  · D+ compté à /200 seulement (le /100 sert à la charge d'effort, pas à la vitesse
+    //    de forme — et les descentes rendent des km "gratuits", GPX souvent surestimés)
+    //  · séances trop montagneuses exclues (> 35 m D+/km : allure plat non déductible)
+    //  · médiane du top 3 (robuste à une séance aberrante) au lieu du maximum
+    //  · décote ×0.93 : un effort d'entraînement RPE 7-8 ≈ 93 % d'un effort de course
+    const cands = [];
     refs.forEach(e => {
-        const kmEff = Number(e.km) + (Number(e.dplus) || 0) / 100; // km-effort (D+ intégré)
+        const km = Number(e.km), dp = Number(e.dplus) || 0;
+        if (km > 0 && dp / km > 35) return;          // profil trop trail/vallonné
+        const kmEff = km + dp / 200;                  // équivalent plat prudent
         const t     = Number(e.minutes);
         const v     = (kmEff * 1000) / t; // m/min
         if (v < 100 || v > 400) return;   // garde-fou : allures aberrantes (marche / erreur de saisie)
         const vo2      = -4.60 + 0.182258 * v + 0.000104 * v * v;
         const pctVo2   = 0.8 + 0.1894393 * Math.exp(-0.012778 * t) + 0.2989558 * Math.exp(-0.1932605 * t);
-        const vdot     = vo2 / pctVo2;
-        if (vdot > 0 && (!best || vdot > best.vdot)) {
-            best = { vdot, refKm: Number(e.km).toFixed(1), refDate: e.date };
-        }
+        const vdot     = (vo2 / pctVo2) * 0.93;       // décote entraînement → course
+        if (vdot > 0) cands.push({ vdot, refKm: km.toFixed(1), refDate: e.date });
     });
+    if (!cands.length) return null;
+    cands.sort((a, b) => b.vdot - a.vdot);
+    const top = cands.slice(0, Math.min(3, cands.length));
+    const best = top[Math.floor(top.length / 2)];     // médiane du top 3
     if (!best || best.vdot < 15 || best.vdot > 90) return null; // valeurs physiologiquement plausibles
     best.vdot = Math.round(best.vdot);
     best.vma = vmaFromVdot(best.vdot);
@@ -6060,7 +6070,10 @@ CONTEXTE TRAIL CLASSIQUE :
     if (ctx.utilisateur.vo2maxEstimee && typeof trainingPaces === 'function') {
         const vNum = parseInt(ctx.utilisateur.vo2maxEstimee);
         const p = trainingPaces(vNum);
-        if (p) alluresTxt = `\nALLURES CIBLES (Daniels, VDOT ${p.vdot}, sur plat) : EF ${p.E.pace} · Marathon ${p.M.pace} · Seuil ${p.T.pace} · VMA ${p.I.pace} · Répétitions ${p.R.pace}. UTILISE CES ALLURES dans les détails du plan (en trail, convertis en effort équivalent RPE/cardio pour les portions vallonnées).`;
+        if (p) {
+            const incertain = ctx.utilisateur.vo2maxEstimee.includes('chrono déclaré') ? '' : ' ATTENTION : VDOT estimé depuis les séances (approximatif) — reste prudent sur les allures dures, propose plutôt des fourchettes ou des repères RPE.';
+            alluresTxt = `\nALLURES CIBLES (Daniels, VDOT ${p.vdot}, sur plat) : EF ${p.E.pace} · Marathon ${p.M.pace} · Seuil ${p.T.pace} · VMA ${p.I.pace} · Répétitions ${p.R.pace}. UTILISE CES ALLURES dans les détails du plan (en trail, convertis en effort équivalent RPE/cardio pour les portions vallonnées).${incertain}`;
+        }
     }
 
     // ── Phase de périodisation explicite (synchronisée avec la frise UI)
@@ -7530,13 +7543,18 @@ function renderTrainingPaces() {
             <span style="flex:0 0 108px;font-weight:700;white-space:nowrap;">${d.pace}</span>
             <span style="flex:1;font-size:.76rem;color:var(--muted);">${name} — ${d.use}</span>
         </div>`).join('');
+    const warn = v.source !== 'ref' ? `
+        <div style="margin-top:8px;padding:8px 12px;background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.35);border-radius:8px;font-size:.75rem;color:var(--text);">
+            <strong>Estimation approximative</strong> — déduite de tes séances d'entraînement.
+            Pour des allures fiables, renseigne ta <strong>Référence chrono</strong> (5 km, 10 km, semi ou marathon) dans ton profil en haut de page.
+        </div>` : '';
     box.style.display = 'block';
     box.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
             <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">Allures d'entraînement — méthode Daniels</div>
             <div style="font-size:.68rem;color:var(--muted);">VDOT ${p.vdot} · ${src}</div>
         </div>
-        ${rows}
+        ${rows}${warn}
         <div style="font-size:.7rem;color:var(--muted);margin-top:8px;">Allures sur plat. En trail, raisonne à l'effort équivalent (RPE / cardio) plutôt qu'à l'allure GPS.</div>`;
 }
 
