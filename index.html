@@ -1146,102 +1146,14 @@
         .empty-state p { font-size: .95rem; }
 
         /* ── [CSS] RECAP ────────────────────────────────── */
-        .recap-card {
-            background: linear-gradient(135deg, #1a4a32 0%, #2d7a56 100%);
-            border-radius: var(--radius);
-            padding: 28px;
-            color: #fff;
-            box-shadow: 0 8px 30px rgba(30,122,86,.25);
-            margin-bottom: 28px;
-        }
-        .recap-card h2 {
-            font-family: var(--font-display);
-            font-size: 1.5rem; letter-spacing: 1.5px;
-            margin-bottom: 20px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .recap-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px;
-        }
-        .recap-item {
-            background: rgba(255,255,255,.1);
-            border: 1px solid rgba(255,255,255,.15);
-            border-radius: 12px;
-            padding: 16px 18px;
-        }
-        .recap-item-label { font-size: .78rem; opacity: .7; text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
-        .recap-item-value { font-family: var(--font-display); font-size: 2rem; letter-spacing: 1px; line-height: 1; margin: 4px 0 2px; }
-        .recap-item-sub { font-size: .8rem; opacity: .65; }
 
         /* ── [CSS] RPE MOYENNE COLORÉE ───────────────────── */
-        .recap-item.rpe-green  { background: rgba(45,158,114,.25); border-color: rgba(45,158,114,.5); }
-        .recap-item.rpe-orange { background: rgba(232,160,32,.22); border-color: rgba(232,160,32,.5); }
-        .recap-item.rpe-red    { background: rgba(224,82,82,.22);  border-color: rgba(224,82,82,.5); }
 
-        .rpe-badge {
-            display: inline-flex; align-items: center; gap: 5px;
-            font-size: .72rem; font-weight: 800;
-            padding: 3px 10px; border-radius: 20px;
-            margin-top: 5px; letter-spacing: .3px;
-        }
-        .rpe-badge.green  { background: rgba(45,158,114,.3);  color: var(--green-bright); }
-        .rpe-badge.orange { background: rgba(232,160,32,.3);  color: #fde08a; }
-        .rpe-badge.red    { background: rgba(224,82,82,.3);   color: #fdb0b0; }
 
         /* ── [CSS] ACCORDÉON RPE 80/20 ───────────────────── */
-        .rpe-accordion {
-            margin-top: 18px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,.15);
-        }
-        .rpe-accordion-btn {
-            width: 100%; display: flex;
-            align-items: center; justify-content: space-between;
-            padding: 14px 18px;
-            background: rgba(255,255,255,.08);
-            border: none; cursor: pointer;
-            font-family: var(--font-main);
-            font-weight: 800; font-size: .88rem;
-            color: rgba(255,255,255,.9);
-            transition: background .2s;
-            text-align: left; gap: 10px;
-        }
-        .rpe-accordion-btn:hover { background: rgba(255,255,255,.14); }
-        .rpe-accordion-arrow {
-            font-size: .75rem; opacity: .7;
-            transition: transform .3s ease;
-            flex-shrink: 0;
-        }
-        .rpe-accordion-btn.open .rpe-accordion-arrow { transform: rotate(180deg); }
 
-        .rpe-accordion-body {
-            display: none;
-            padding: 18px 20px;
-            background: rgba(0,0,0,.15);
-        }
-        .rpe-accordion-body.open { display: block; }
 
         /* Table RPE */
-        .rpe-table {
-            width: 100%; border-collapse: collapse;
-            font-size: .82rem; margin: 14px 0;
-        }
-        .rpe-table th {
-            text-align: left; padding: 7px 10px;
-            font-size: .72rem; text-transform: uppercase;
-            letter-spacing: .4px; opacity: .6;
-            border-bottom: 1px solid rgba(255,255,255,.15);
-        }
-        .rpe-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
-        .rpe-table tr:last-child td { border-bottom: none; }
-        .rpe-table tbody tr:hover { background: transparent; }
-        .rpe-dot {
-            display: inline-block; width: 10px; height: 10px;
-            border-radius: 50%; margin-right: 6px; flex-shrink: 0;
-        }
 
         .rule8020-box {
             background: rgba(45,158,114,.15);
@@ -2620,6 +2532,14 @@ th.effort-col, td.effort-col {
             <div class="stat-sub" id="sc-tapis-dur">0 h</div>
         </div>
     </div>
+    <div class="stat-card anim" id="sc-card-bpm" style="display:none; animation-delay:.24s">
+        <div class="stat-icon" style="background:#fdeef0;"><svg class="ic ic-lg"><use href="#i-heart"/></svg></div>
+        <div>
+            <div class="stat-label">BPM moyen</div>
+            <div class="stat-value" id="sc-bpm">–</div>
+            <div class="stat-sub">Fréquence cardiaque</div>
+        </div>
+    </div>
     <div class="stat-card anim" id="sc-card-count" style="display:none; animation-delay:.25s">
         <div class="stat-icon count"><svg class="ic ic-lg"><use href="#i-calendar"/></svg></div>
         <div>
@@ -2774,130 +2694,8 @@ th.effort-col, td.effort-col {
         </div>
     </div>
 
-    <!-- RECAP -->
-    <div class="recap-card">
-        <h2><svg class="ic"><use href="#i-chart"/></svg> Récapitulatif global</h2>
-        <div class="recap-grid">
-            <div class="recap-item" id="r-card-course" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-run"/></svg> Course</div>
-                <div class="recap-item-value" id="r-km">0 km</div>
-                <div class="recap-item-sub" id="r-dplus">D+ 0 m</div>
-            </div>
-            <div class="recap-item" id="r-card-marche" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-walk"/></svg> Marche</div>
-                <div class="recap-item-value" id="r-marche-km">0 km</div>
-                <div class="recap-item-sub" id="r-marche-dplus">D+ 0 m</div>
-            </div>
-            <div class="recap-item" id="r-card-speed" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-bolt"/></svg> Vitesse moy. course</div>
-                <div class="recap-item-value" id="r-speed">–</div>
-                <div class="recap-item-sub" id="r-pace">– min/km</div>
-            </div>
-            <div class="recap-item" id="r-card-velo" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-bike"/></svg> Vélo home trainer</div>
-                <div class="recap-item-value" id="r-velo">0 h</div>
-                <div class="recap-item-sub">Heures d'effort</div>
-            </div>
-            <div class="recap-item" id="r-card-renfo" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-barbell"/></svg> Renforcement</div>
-                <div class="recap-item-value" id="r-renfo">0 h</div>
-                <div class="recap-item-sub">Heures de travail</div>
-            </div>
-            <div class="recap-item" id="r-card-elliptique" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-wave"/></svg> Elliptique</div>
-                <div class="recap-item-value" id="r-elliptique">0 h</div>
-                <div class="recap-item-sub">Heures d'effort</div>
-            </div>
-            <div class="recap-item" id="r-card-rameur" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-rowing"/></svg> Rameur</div>
-                <div class="recap-item-value" id="r-rameur">0 h</div>
-                <div class="recap-item-sub">Heures d'effort</div>
-            </div>
-            <div class="recap-item" id="r-card-tapis" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-run"/></svg> Tapis de course</div>
-                <div class="recap-item-value" id="r-tapis-km">0 km</div>
-                <div class="recap-item-sub" id="r-tapis-dur">0 h</div>
-            </div>
-            <div class="recap-item" id="r-card-count" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-list"/></svg> Total séances</div>
-                <div class="recap-item-value" id="r-count">0</div>
-                <div class="recap-item-sub" id="r-rpe">RPE moyen –</div>
-            </div>
-            <div class="recap-item" id="r-card-bpm" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-heart"/></svg> BPM moyen</div>
-                <div class="recap-item-value" id="r-bpm">–</div>
-                <div class="recap-item-sub">Fréquence cardiaque</div>
-            </div>
-            <!-- CASE RPE MOYENNE COLORÉE -->
-            <div class="recap-item" id="rpeScoreCard" style="display:none">
-                <div class="recap-item-label"><svg class="ic ric"><use href="#i-bolt"/></svg> Moyenne RPE — règle 80/20</div>
-                <div class="recap-item-value" id="rpeScoreValue">–</div>
-                <div id="rpeBadge"></div>
-            </div>
-        </div>
-
-        <!-- ACCORDÉON RPE 80/20 -->
-        <div class="rpe-accordion">
-            <button class="rpe-accordion-btn" id="rpeAccordionBtn" onclick="toggleRpeAccordion()">
-                <span><svg class="ic ric"><use href="#i-bulb"/></svg> Comprendre le RPE et la règle 80/20</span>
-                <span class="rpe-accordion-arrow">▼</span>
-            </button>
-            <div class="rpe-accordion-body" id="rpeAccordionBody">
-
-                <!-- Table RPE -->
-                <table class="rpe-table">
-                    <thead>
-                        <tr>
-                            <th>RPE</th>
-                            <th>Ressenti</th>
-                            <th>Type de séance typique</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong style="color:var(--green-bright)">1–3</strong></td>
-                            <td>Très facile</td>
-                            <td>Footing de récupération</td>
-                        </tr>
-                        <tr>
-                            <td><strong style="color:#56c99a">4–6</strong></td>
-                            <td>Modéré</td>
-                            <td>Endurance fondamentale, renforcement</td>
-                        </tr>
-                        <tr>
-                            <td><strong style="color:#e8a020">7–8</strong></td>
-                            <td>Difficile</td>
-                            <td>Sortie longue D+, séance tempo</td>
-                        </tr>
-                        <tr>
-                            <td><strong style="color:#e05252">9–10</strong></td>
-                            <td>Maximal</td>
-                            <td>Compétition, fractionné intensif</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <!-- Règle 80/20 -->
-                <div class="rule8020-box">
-                    <strong>La règle 80/20 (entraînement polarisé)</strong><br>
-                    <strong>80 %</strong> de ton volume à <strong>faible intensité</strong> (RPE 1–5) : endurance fondamentale, allure confortable où tu peux parler sans t'essouffler.<br>
-                    <strong>20 %</strong> seulement à <strong>intensité élevée</strong> (RPE 6–10) : tempo, fractionné, compétition.<br><br>
-                    Cette répartition est celle observée chez les meilleurs athlètes du monde. Elle améliore plus vite le VO₂max et l'économie de course, tout en évitant la zone grise (intensité modérée fatigante qui ralentit la progression).
-                    <div class="rule8020-sources">Sources : Stephen Seiler • Esteve-Lanao 2007 • Muñoz 2014 • Matt Fitzgerald — <em>80/20 Running</em> (2014)</div>
-                </div>
-
-                <!-- Légende couleurs -->
-                <div style="margin-top:14px;font-size:.8rem;color:rgba(255,255,255,.75);display:flex;flex-direction:column;gap:6px;">
-                    <div><span class="rpe-dot" style="background:#2d9e72"></span><strong style="color:var(--green-bright)">RPE moyen 3–5</strong> — Bonne répartition EF, tu respectes la règle 80/20</div>
-                    <div><span class="rpe-dot" style="background:#e8a020"></span><strong style="color:#fde08a">RPE moyen 5–6.5</strong> — Zone grise, attention à ne pas trop charger</div>
-                    <div><span class="rpe-dot" style="background:#e05252"></span><strong style="color:#fdb0b0">RPE moyen &gt; 6.5</strong> — Trop intense, risque de surentraînement</div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- READINESS BANNER -->
-        <div class="readiness-wrap" id="readinessWrap" style="display:none">
+    <!-- ÉTAT DE PRÉPARATION (ex-recap, conservé en carte autonome) -->
+    <div class="readiness-wrap" id="readinessWrap" style="display:none">
             <div class="readiness-banner none" id="readinessBanner">
                 <div class="rb-icon" id="rbIcon"><svg class="ic"><use href="#i-chart"/></svg></div>
                 <div class="rb-body">
@@ -2906,8 +2704,6 @@ th.effort-col, td.effort-col {
                     <div class="rb-criteria" id="rbCriteria"></div>
                 </div>
             </div>
-        </div>
-    </div>
 
     <!-- VUE SEMAINE EN COURS -->
     <div class="week-view-card" id="weekViewCard" style="display:none">
@@ -4429,6 +4225,7 @@ function renderStats(entries) {
     sc('sc-card-elliptique', elliptiqueMin > 0);
     sc('sc-card-rameur',     rameurMin > 0);
     sc('sc-card-tapis',      tapisKm > 0 || tapisMin > 0);
+    sc('sc-card-bpm',        bpmCount > 0);
     sc('sc-card-count',      !isEmpty);
 
     // ── Valeurs stat-cards ──────────────────
@@ -4446,84 +4243,12 @@ function renderStats(entries) {
     document.getElementById('sc-rpe').textContent        = `RPE moy ${avgRpe}`;
     document.getElementById('sc-speed').textContent      = avgSpeed ? `${avgSpeed.speedKmh} km/h` : '– km/h';
     document.getElementById('sc-pace').textContent       = avgSpeed ? `${avgSpeed.pace} /km` : '– min/km';
+    document.getElementById('sc-bpm').textContent        = avgBpm !== '–' ? `${avgBpm} bpm` : '–';
 
-    // ── Récap global conditionnel ───────────
-    sc('r-card-course',      courseKm > 0 || courseMin > 0);
-    sc('r-card-marche',      marcheKm > 0 || marcheMin > 0);
-    sc('r-card-speed',       avgSpeed !== null);
-    sc('r-card-velo',        veloMin > 0);
-    sc('r-card-renfo',       renfoMin > 0);
-    sc('r-card-elliptique',  elliptiqueMin > 0);
-    sc('r-card-rameur',      rameurMin > 0);
-    sc('r-card-tapis',       tapisKm > 0 || tapisMin > 0);
-    sc('r-card-count',       !isEmpty);
-    sc('r-card-bpm',         bpmCount > 0);
-    sc('rpeScoreCard',       !isEmpty);
-
-    // ── Valeurs récap ───────────────────────
-    document.getElementById('r-km').textContent          = `${courseKm.toFixed(1)} km`;
-    document.getElementById('r-dplus').textContent       = `D+ ${Math.round(courseDplus)} m`;
-    document.getElementById('r-marche-km').textContent   = `${marcheKm.toFixed(1)} km`;
-    document.getElementById('r-marche-dplus').textContent= `D+ ${Math.round(marcheDplus)} m`;
-    document.getElementById('r-velo').textContent        = `${veloH} h`;
-    document.getElementById('r-renfo').textContent       = `${renfoH} h`;
-    document.getElementById('r-elliptique').textContent  = `${elliptiqueH} h`;
-    document.getElementById('r-rameur').textContent      = `${rameurH} h`;
-    document.getElementById('r-tapis-km').textContent    = `${tapisKm.toFixed(1)} km`;
-    document.getElementById('r-tapis-dur').textContent   = `${tapisH} h`;
-    document.getElementById('r-count').textContent       = entries.length;
-    document.getElementById('r-rpe').textContent         = `RPE moyen ${avgRpe}`;
-    document.getElementById('r-bpm').textContent         = avgBpm !== '–' ? `${avgBpm} bpm` : '–';
-    document.getElementById('r-speed').textContent       = avgSpeed ? `${avgSpeed.speedKmh}` : '–';
-    document.getElementById('r-pace').textContent        = avgSpeed ? `${avgSpeed.pace} /km` : '– min/km';
-
-    const rSpeedEl = document.getElementById('r-speed');
-    if (avgSpeed) rSpeedEl.innerHTML = `${avgSpeed.speedKmh} <span style="font-size:.6em;opacity:.8">km/h</span>`;
-
-    // ── RPE Score coloré 80/20 ──
-    renderRpeScore(avgRpe);
+    // (Récapitulatif global supprimé — doublon de la rangée de stats du haut)
 }
 
-function renderRpeScore(avgRpe) {
-    const card  = document.getElementById('rpeScoreCard');
-    const val   = document.getElementById('rpeScoreValue');
-    const badge = document.getElementById('rpeBadge');
 
-    if (avgRpe === '–') {
-        card.className = 'recap-item';
-        val.textContent = '–';
-        badge.innerHTML = '<div style="font-size:.75rem;opacity:.5;margin-top:4px;">Aucune donnée RPE</div>';
-        return;
-    }
-
-    const rpe = parseFloat(avgRpe);
-    val.textContent = avgRpe;
-
-    let level, label, icon;
-    if (rpe <= 5) {
-        level = 'green';
-        label = 'Bonne répartition 80/20';
-        icon  = 'check';
-    } else if (rpe <= 6.5) {
-        level = 'orange';
-        label = 'Zone grise — attention';
-        icon  = 'alert';
-    } else {
-        level = 'red';
-        label = 'Trop intense — risque de surentraînement';
-        icon  = 'alert';
-    }
-
-    card.className = `recap-item rpe-${level}`;
-    badge.innerHTML = `<div class="rpe-badge ${level}"><svg class="ic ric"><use href="#i-${icon}"/></svg> ${label}</div>`;
-}
-
-function toggleRpeAccordion() {
-    const btn  = document.getElementById('rpeAccordionBtn');
-    const body = document.getElementById('rpeAccordionBody');
-    const open = body.classList.toggle('open');
-    btn.classList.toggle('open', open);
-}
 
 /* ─────────────────────────────────────────
    [JS:STORAGE] DELETE / CLEAR
