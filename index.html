@@ -1227,6 +1227,17 @@
         .video-btn .ic { width: 18px; height: 18px; }
         .video-btn:hover { color: var(--green); background: var(--green-lt); }
 
+        .image-btn {
+            background: transparent;
+            color: var(--muted); border: none;
+            cursor: pointer;
+            padding: 6px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: color .15s, background .15s;
+        }
+        .image-btn .ic { width: 18px; height: 18px; }
+        .image-btn:hover { color: var(--green); background: var(--green-lt); }
+
         .video-preview-wrap {
             border-radius: 16px; overflow: hidden;
             box-shadow: 0 8px 32px rgba(0,0,0,.3);
@@ -1251,6 +1262,14 @@
         }
         .video-status.recording { color: var(--red); }
         .video-status.done { color: var(--green); }
+
+        .image-preview-wrap {
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,.3);
+            margin-bottom: 16px; background: #000;
+            aspect-ratio: 1 / 1;
+        }
+        #imageCanvas { display: block; width: 100%; height: auto; }
 
         .btn-record {
             padding: 11px 24px; border-radius: 9px; border: none;
@@ -1597,54 +1616,6 @@
             box-shadow: 0 4px 14px rgba(224,82,82,.35);
         }
 
-        /* ── [CSS] RENFORCEMENT HINT BOX ─────────────────── */
-        .renfo-hint {
-            display: none;
-            margin-top: 8px;
-            background: var(--amber-lt);
-            border: 1px solid #f0c060;
-            border-radius: 10px;
-            padding: 12px 14px;
-        }
-        .renfo-hint.show { display: block; }
-        .renfo-hint-title {
-            font-size: .78rem; font-weight: 800;
-            color: #7a5200; text-transform: uppercase;
-            letter-spacing: .4px; margin-bottom: 8px;
-        }
-        .renfo-hint-links {
-            display: flex; flex-direction: column; gap: 6px;
-        }
-        .renfo-hint-link {
-            display: flex; align-items: center; gap: 8px;
-            padding: 8px 12px;
-            background: #fff8e6;
-            border: 1px solid #f0c060;
-            border-radius: 8px;
-            text-decoration: none;
-            color: #7a5200;
-            font-size: .82rem; font-weight: 700;
-            font-family: var(--font-main);
-            transition: background .15s;
-        }
-        .renfo-hint-link:hover {
-            background: #fde08a;
-            color: #5a3800;
-        }
-        .renfo-hint-icon {
-            font-size: 1.1rem; flex-shrink: 0;
-        }
-        [data-theme="dark"] .renfo-hint {
-            background: #2a1f00;
-            border-color: #5a4000;
-        }
-        [data-theme="dark"] .renfo-hint-title { color: #fde08a; }
-        [data-theme="dark"] .renfo-hint-link {
-            background: #1f1700;
-            border-color: #5a4000;
-            color: #fde08a;
-        }
-        [data-theme="dark"] .renfo-hint-link:hover { background: #3a2a00; }
         .filter-bar {
             padding: 14px 20px;
             border-bottom: 1px solid var(--border);
@@ -2320,6 +2291,14 @@ th.effort-col, td.effort-col {
     <!-- Ressources externes -->
     <div class="sb-group">
         <div class="sb-group-label">Ressources</div>
+        <a class="sb-item" href="https://run-nature.com/2026/05/04/5-exercices-bas-du-corps-pour-dominer-en-trail/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M7 3h10v4l-2 14h-3l-1 -9 -1 9h-3l-2 -14v-4z"/></svg>
+            Renfo bas du corps
+        </a>
+        <a class="sb-item" href="https://run-nature.com/2026/05/04/5-exercices-haut-du-corps-pour-progresser-en-trail/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M2 12h1"/><path d="M21 12h1"/><path d="M5 9v6"/><path d="M19 9v6"/><path d="M7 10v4"/><path d="M17 10v4"/><path d="M7 12h10"/></svg>
+            Renfo haut du corps
+        </a>
         <a class="sb-item" href="https://run-nature.com/2026/05/04/mon-dashboard-suivi-trail-loutil-pour-les-coureurs-qui-se-connaissent/" target="_blank">
             <svg viewBox="0 0 24 24"><path d="M3 20l5-9 4 5 3-5 6 9z"/></svg>
             Méthode utilisée
@@ -2396,6 +2375,7 @@ th.effort-col, td.effort-col {
 <g id="i-key"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15l8.15 -8.15"/><path d="M16 5l3 3"/><path d="M14 7l3 3"/></g>
 <g id="i-robot"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 16v.01M15 16v.01"/><path d="M12 3v5"/></g>
 <g id="i-trend"><path d="M3 17l6 -6l4 4l8 -8"/><path d="M14 7h7v7"/></g>
+<g id="i-camera"><path d="M3 8a2 2 0 0 1 2 -2h2l1.5 -2h7l1.5 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"/><circle cx="12" cy="13" r="3.2"/></g>
 </defs></svg>
 
 <!-- ── [HTML] HERO ─────────────────────────────────────── -->
@@ -2721,6 +2701,7 @@ th.effort-col, td.effort-col {
                         <th><svg class="ic"><use href="#i-list"/></svg></th>
                         <th><svg class="ic"><use href="#i-edit"/></svg></th>
                         <th><svg class="ic"><use href="#i-video"/></svg></th>
+                        <th><svg class="ic"><use href="#i-camera"/></svg></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -2747,14 +2728,14 @@ th.effort-col, td.effort-col {
 
     <!-- VUE SEMAINE EN COURS -->
     <div class="week-view-card" id="weekViewCard" style="display:none">
-        <div class="week-view-title">📅 Semaine en cours</div>
+        <div class="week-view-title"><svg class="ic"><use href="#i-calendar"/></svg> Semaine en cours</div>
         <div class="week-days-grid" id="weekDaysGrid"></div>
         <div class="week-totals" id="weekTotals"></div>
     </div>
 
     <!-- INDICATEUR DE CHARGE SEMAINE -->
     <div class="charge-card" id="chargeCard" style="display:none">
-        <div class="charge-title">⚡ Charge d'entraînement — semaine N vs N-1</div>
+        <div class="charge-title"><svg class="ic"><use href="#i-bolt"/></svg> Charge d'entraînement — semaine N vs N-1</div>
         <div class="charge-bars">
             <div class="charge-bar-wrap">
                 <div class="charge-bar-label">Semaine précédente</div>
@@ -2781,7 +2762,7 @@ th.effort-col, td.effort-col {
     <div class="chart-card" id="chartCard" style="display:none">
         <div class="chart-header">
             <div>
-                <h2 class="chart-title">📈 Volume hebdomadaire — 8 dernières semaines</h2>
+                <h2 class="chart-title"><svg class="ic"><use href="#i-trend"/></svg> Volume hebdomadaire — 8 dernières semaines</h2>
                 <p class="chart-sub">Km de course <span class="chart-legend-dot green"></span> et D+ <span class="chart-legend-dot amber"></span></p>
             </div>
             <div class="chart-tabs">
@@ -2805,7 +2786,7 @@ th.effort-col, td.effort-col {
 
         <!-- En-tête toujours visible -->
         <div class="coach-header">
-            <div class="coach-header-icon">🧠</div>
+            <div class="coach-header-icon"><svg class="ic" style="width:22px;height:22px;color:#fff"><use href="#i-brain"/></svg></div>
             <div class="coach-header-text">
                 <div class="coach-header-title">Coach IA — Analyse personnalisée</div>
                 <div class="coach-header-sub">Analyse ton entraînement et te propose un plan pour la semaine suivante</div>
@@ -2840,7 +2821,7 @@ th.effort-col, td.effort-col {
                 <div style="font-size:.72rem;color:var(--muted);margin-top:6px;">🐇 Haiku ≈ 0,01 $ / analyse · ⚖️ Sonnet ≈ 0,03 $ · 🦅 Opus ≈ 0,05 $. Haiku suffit largement au quotidien — l'effort de réflexion est réglé automatiquement sur "moyen".</div>
             </div>
             <div class="coach-optin-actions">
-                <button class="btn-coach-activate" id="coachActivateBtn" onclick="activateCoach()">🧠 Activer le Coach IA</button>
+                <button class="btn-coach-activate" id="coachActivateBtn" onclick="activateCoach()"><svg class="ic"><use href="#i-brain"/></svg> Activer le Coach IA</button>
                 <button class="btn-coach-dismiss" onclick="dismissCoach()">Plus tard</button>
             </div>
         </div>
@@ -2945,20 +2926,6 @@ th.effort-col, td.effort-col {
                             <option value="Rameur">🚣 Rameur</option>
                             <option value="Tapis de course">🏃‍♂️ Tapis de course</option>
                         </select>
-                        <!-- Encart renforcement modal -->
-                        <div class="renfo-hint" id="m-renfoHint">
-                            <div class="renfo-hint-title">💡 Pas sûr de quoi faire ?</div>
-                            <div class="renfo-hint-links">
-                                <a class="renfo-hint-link" href="https://run-nature.com/2026/05/04/5-exercices-bas-du-corps-pour-dominer-en-trail/" target="_blank" rel="noopener">
-                                    <span class="renfo-hint-icon">🦵</span>
-                                    <span>5 exercices bas du corps</span>
-                                </a>
-                                <a class="renfo-hint-link" href="https://run-nature.com/2026/05/04/5-exercices-haut-du-corps-pour-progresser-en-trail/" target="_blank" rel="noopener">
-                                    <span class="renfo-hint-icon">💪</span>
-                                    <span>5 exercices haut du corps</span>
-                                </a>
-                            </div>
-                        </div>
                     </div>
                     <div class="form-group" id="m-kmGroup">
                         <label>Distance (km)</label>
@@ -3266,7 +3233,6 @@ function toggleModalFields() {
     document.getElementById('m-dplusGroup').classList.toggle('hidden', !hasDplus);
     document.getElementById('m-minutesGroup').classList.remove('hidden');
     document.getElementById('m-speedPreviewGroup').classList.toggle('hidden', !showSpeed);
-    document.getElementById('m-renfoHint').classList.toggle('show', isRenfo);
     const mGiletEl = document.getElementById('m-giletGroup');
     if (mGiletEl) mGiletEl.classList.toggle('show', isGilet);
     ['m-liquideGroup','m-nutritionGroup','m-rpeGroup','m-bpmGroup'].forEach(id => {
@@ -4161,6 +4127,7 @@ function renderTable(entries) {
             <td><button class="detail-btn" onclick="openDetailModal(${item.id})" title="Voir détails (nutrition, notes, gilet)"><svg class=\"ic\"><use href=\"#i-list\"/></svg></button></td>
             <td><button class="detail-btn" onclick="editEntry(${item.id})" title="Modifier la séance"><svg class=\"ic\"><use href=\"#i-edit\"/></svg></button></td>
             <td><button class="video-btn" onclick="openVideoModal(${item.id})" title="Générer vidéo animée"><svg class=\"ic\"><use href=\"#i-video\"/></svg></button></td>
+            <td><button class="image-btn" onclick="openImageModal(${item.id})" title="Générer image à partager"><svg class=\"ic\"><use href=\"#i-camera\"/></svg></button></td>
             <td><button class="delete-btn" onclick="deleteEntry(${item.id})" title="Supprimer"><svg class=\"ic\"><use href=\"#i-trash\"/></svg></button></td>
         `;
         tbody.appendChild(row);
@@ -5539,6 +5506,319 @@ function generateVideo() {
     }
 
     tick();
+}
+
+/* ═══════════════════════════════════════════════
+   [JS:IMAGE] IMAGE MODAL — carte statique à partager
+   (logo + run-nature.com toujours incrustés)
+═══════════════════════════════════════════════ */
+let _imageEntry = null;
+let _imageBgImg = null;
+
+function openImageModal(id) {
+    const entry = getEntries().find(e => e.id === id);
+    if (!entry) return;
+    _imageEntry = entry;
+    _imageBgImg = null;
+    document.getElementById('imageModalOverlay').classList.add('open');
+    const btn = document.getElementById('btnGenImage');
+    btn.disabled = false;
+    btn.innerHTML = '<svg class="ic"><use href="#i-download"/></svg> Télécharger l\'image';
+    drawImageFrame(_imageEntry);
+}
+
+function closeImageModal() {
+    document.getElementById('imageModalOverlay').classList.remove('open');
+    _imageEntry = null; _imageBgImg = null;
+}
+function closeImageIfOverlay(e) {
+    if (e.target === document.getElementById('imageModalOverlay')) closeImageModal();
+}
+
+function loadImageBg(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => { _imageBgImg = img; drawImageFrame(_imageEntry); };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+}
+function clearImageBg() { _imageBgImg = null; drawImageFrame(_imageEntry); }
+
+// Tronque un texte avec "…" pour qu'il tienne dans maxWidth (police déjà définie sur ctx)
+function truncateToWidth(ctx, text, maxWidth) {
+    if (ctx.measureText(text).width <= maxWidth) return text;
+    let t = text;
+    while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth) t = t.slice(0, -1);
+    return t + '…';
+}
+
+// Grain fin (texture bruit) — look éditorial 2026, discret
+function _drawGrain(ctx, W, H, alpha) {
+    const g = document.createElement('canvas');
+    g.width = W; g.height = H;
+    const gctx = g.getContext('2d');
+    const imgData = gctx.createImageData(W, H);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+        const v = Math.random() * 255;
+        d[i] = v; d[i+1] = v; d[i+2] = v; d[i+3] = 255;
+    }
+    gctx.putImageData(imgData, 0, 0);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.drawImage(g, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.restore();
+}
+
+/* ─── DESSIN DE LA CARTE STATIQUE (design 2026) ─── */
+function drawImageFrame(entry) {
+    if (!entry) return;
+    const canvas = document.getElementById('imageCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = 1080, H = 1080;
+    canvas.width = W; canvas.height = H;
+
+    const isCourse = isDistanceType(entry.type);
+    const mins  = Number(entry.minutes) || 0;
+    const km    = Number(entry.km)      || 0;
+    const dplus = Math.round(Number(entry.dplus) || 0);
+    const bpm   = Number(entry.bpm)     || 0;
+    const rpe   = Number(entry.rpe)     || 0;
+    const h     = Math.floor(mins / 60);
+    const m     = mins % 60;
+
+    const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    const [yr, mo, d] = entry.date.split('-');
+    const dateFmt = `${d} ${months[parseInt(mo)-1]} ${yr}`;
+
+    const speedObj = isCourse ? (
+        (entry.speedKmh && entry.speedKmh > 0)
+            ? { speedKmh: Number(entry.speedKmh).toFixed(1), pace: entry.pace }
+            : calcSpeed(km, mins)
+    ) : null;
+
+    /* ── 1. FOND : mesh gradient + grain, ou photo utilisateur ── */
+    if (_imageBgImg) {
+        const scale = Math.max(W / _imageBgImg.width, H / _imageBgImg.height);
+        const sw = _imageBgImg.width * scale, sh = _imageBgImg.height * scale;
+        ctx.drawImage(_imageBgImg, (W-sw)/2, (H-sh)/2, sw, sh);
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0,    'rgba(6,20,14,0.30)');
+        grad.addColorStop(0.45, 'rgba(6,20,14,0.28)');
+        grad.addColorStop(0.75, 'rgba(6,16,11,0.78)');
+        grad.addColorStop(1,    'rgba(5,14,10,0.94)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+    } else {
+        ctx.fillStyle = '#0a1f16';
+        ctx.fillRect(0, 0, W, H);
+        // Mesh gradient : blobs doux, asymétriques
+        [
+            { x: W*0.88, y: H*0.08, r: 620, c: 'rgba(93,202,165,0.32)' },
+            { x: W*0.05, y: H*0.18, r: 480, c: 'rgba(45,158,114,0.24)' },
+            { x: W*0.78, y: H*0.94, r: 560, c: 'rgba(168,240,208,0.14)' },
+            { x: W*0.12, y: H*0.98, r: 520, c: 'rgba(13,74,50,0.55)' }
+        ].forEach(b => {
+            const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+            g.addColorStop(0, b.c);
+            g.addColorStop(1, 'rgba(10,31,22,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H);
+        });
+        // Assombrit progressivement vers le bas pour la lisibilité du texte
+        const vign = ctx.createLinearGradient(0, H*0.42, 0, H);
+        vign.addColorStop(0, 'rgba(6,16,11,0)');
+        vign.addColorStop(1, 'rgba(4,12,8,0.80)');
+        ctx.fillStyle = vign;
+        ctx.fillRect(0, 0, W, H);
+        // Ligne de montagnes minimaliste (trait fin), casée dans la zone vide du haut
+        // pour ne jamais croiser le gros chiffre ou les cartes de stats.
+        ctx.save();
+        ctx.globalAlpha = 0.30;
+        ctx.strokeStyle = '#a8f0d0';
+        ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, 220);
+        ctx.lineTo(W*0.18, 160); ctx.lineTo(W*0.30, 210);
+        ctx.lineTo(W*0.46, 140); ctx.lineTo(W*0.60, 200);
+        ctx.lineTo(W*0.74, 155); ctx.lineTo(W, 230);
+        ctx.stroke();
+        ctx.restore();
+        _drawGrain(ctx, W, H, 0.035);
+    }
+
+    /* ── 2. EN-TÊTE : pastille type (droite) ── */
+    ctx.save();
+    const typeColors = { 'Course':'#a8f0d0', 'Trail':'#a8c0ff', 'Marche':'#d8c0f0', 'Cardio':'#f5c07e', 'Elliptique':'#c0d0ff', 'Rameur':'#a8e0ff', 'Renforcement':'#fde08a', 'Vélo Home Trainer':'#7eb8f5', 'Tapis de course':'#ffd0a8' };
+    const typeColor = typeColors[entry.type] || '#a8f0d0';
+    const typeTxt = entry.type.toUpperCase();
+    ctx.font = '800 26px Nunito, Arial, sans-serif';
+    ctx.textAlign = 'right';
+    const tW = ctx.measureText(typeTxt).width + 44;
+    const tX = W - 56 - tW, tY = 56, tH = 60;
+    roundRect(ctx, tX, tY, tW, tH, tH/2);
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.fill();
+    ctx.strokeStyle = typeColor + 'aa';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = typeColor;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(typeTxt, W - 56 - 22, tY + tH/2 + 1);
+    ctx.textAlign = 'left';
+    ctx.restore();
+
+    /* ── 3. HERO : date + valeur principale (dégradé) + libellé ── */
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '700 26px Nunito, Arial, sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    ctx.letterSpacing = '3px';
+    ctx.fillText(dateFmt.toUpperCase(), 56, 310);
+    ctx.restore();
+
+    let mainValue, mainUnit, mainLabel;
+    if (isCourse) {
+        mainValue = km.toFixed(2); mainUnit = 'km'; mainLabel = 'Distance';
+    } else {
+        mainValue = h > 0 ? `${h}:${String(m).padStart(2,'0')}` : `${m}`;
+        mainUnit = h > 0 ? 'h:min' : 'min'; mainLabel = 'Durée';
+    }
+    const mainY = 506;
+    ctx.save();
+    ctx.font = 'bold 208px Bebas Neue, Arial Black, sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    const mainW = ctx.measureText(mainValue).width;
+    const txtGrad = ctx.createLinearGradient(56, 0, 56 + mainW, 0);
+    txtGrad.addColorStop(0, '#ffffff');
+    txtGrad.addColorStop(1, '#a8f0d0');
+    ctx.fillStyle = txtGrad;
+    ctx.fillText(mainValue, 56, mainY);
+    ctx.font = '700 52px Nunito, Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.fillText(mainUnit, 56 + mainW + 14, mainY - 28);
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.60)';
+    ctx.font = '700 32px Nunito, Arial, sans-serif';
+    ctx.letterSpacing = '2px';
+    ctx.fillText(mainLabel.toUpperCase(), 56, mainY + 46);
+    ctx.restore();
+
+    /* ── 4. STATS SECONDAIRES en cartes "bento" ── */
+    let stats = buildStats(entry, isCourse,
+        h > 0 ? `${h}:${String(m).padStart(2,'0')}` : `${m}:00`,
+        speedObj, dplus, bpm, rpe, mins, h, m);
+    // Pour les activités non-distance, la Durée est déjà le chiffre héros : éviter la redite
+    if (!isCourse) stats = stats.filter(s => s.label !== 'Durée');
+
+    const marginX = 56, gap = 16;
+    const rowY = 612, rowH = 132;
+    const n = stats.length;
+    const availW = W - marginX*2;
+    const cardW = n === 1 ? 260 : (n > 1 ? (availW - gap*(n-1)) / n : 0);
+    const valFont = n <= 3 ? 46 : 36;
+    const unitFont = n <= 3 ? 19 : 16;
+    const labelFont = n <= 3 ? 21 : 17;
+
+    stats.forEach((s, i) => {
+        const cx = marginX + i * (cardW + gap);
+        ctx.save();
+        roundRect(ctx, cx, rowY, cardW, rowH, 22);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.font = `800 ${valFont}px Bebas Neue, Arial Black, sans-serif`;
+        ctx.fillStyle = '#ffffff';
+        const vW = ctx.measureText(s.value).width;
+        ctx.fillText(s.value, cx + 22, rowY + 58);
+        if (s.unit) {
+            ctx.font = `700 ${unitFont}px Nunito, Arial, sans-serif`;
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.fillText(s.unit, cx + 22 + vW + 6, rowY + 58);
+        }
+        ctx.font = `700 ${labelFont}px Nunito, Arial, sans-serif`;
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.letterSpacing = '0.5px';
+        ctx.fillText(s.label.toUpperCase(), cx + 22, rowY + 92);
+        ctx.restore();
+    });
+
+    /* ── 5. SIGNATURE (toujours visible) : logo centré en bas, sans bandeau ── */
+    const sigCenterX = W / 2;
+    const sigIconTop = H - 132;
+
+    // Citation / note au-dessus de la signature, si présente
+    if (entry.notes && entry.notes.trim()) {
+        ctx.save();
+        ctx.font = 'italic 600 28px Nunito, Arial, sans-serif';
+        ctx.fillStyle = 'rgba(168,240,208,0.85)';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        const noteTxt = truncateToWidth(ctx, `"${entry.notes.trim()}"`, W - 160);
+        ctx.fillText(noteTxt, sigCenterX, sigIconTop - 44);
+        ctx.textAlign = 'left';
+        ctx.restore();
+    }
+
+    ctx.save();
+    // Petit repère montagne, centré
+    ctx.strokeStyle = '#a8f0d0'; ctx.lineWidth = 3;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const ix0 = sigCenterX - 17, iy0 = sigIconTop + 24;
+    ctx.beginPath();
+    ctx.moveTo(ix0, iy0); ctx.lineTo(ix0+9, iy0-16); ctx.lineTo(ix0+16, iy0-8);
+    ctx.lineTo(ix0+25, iy0-22); ctx.lineTo(ix0+34, iy0-10);
+    ctx.stroke();
+
+    // Nom de marque
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 30px Nunito, Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.letterSpacing = '1.5px';
+    ctx.fillText('RUN NATURE', sigCenterX, H - 78);
+
+    // URL du site
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.font = '700 24px Nunito, Arial, sans-serif';
+    ctx.letterSpacing = '0px';
+    ctx.fillText('run-nature.com', sigCenterX, H - 42);
+    ctx.textAlign = 'left';
+    ctx.restore();
+}
+
+/* ─── TÉLÉCHARGEMENT DE L'IMAGE ─────────────────── */
+function generateImage() {
+    const entry = _imageEntry;
+    if (!entry) return;
+    const btn = document.getElementById('btnGenImage');
+    btn.disabled = true;
+
+    drawImageFrame(entry);
+    const canvas = document.getElementById('imageCanvas');
+    canvas.toBlob(blob => {
+        if (!blob) { btn.disabled = false; return; }
+        const url = URL.createObjectURL(blob);
+        const [yr, mo, d] = entry.date.split('-');
+        const fname = `run-nature_${d}-${mo}-${yr}_${entry.type.replace(/\s/g,'-')}.png`;
+        const a = document.createElement('a');
+        a.href = url; a.download = fname; a.click();
+        URL.revokeObjectURL(url);
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="ic"><use href="#i-check"/></svg> Téléchargée — refaire ?';
+        showToast('🖼️ Image téléchargée !');
+    }, 'image/png');
 }
 
 /* ═══════════════════════════════════════════════
@@ -7397,6 +7677,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         closeModal();
         closeVideoModal();
+        closeImageModal();
         closeGoalModal();
         closeExoModal();
         closeDetailModal();
@@ -7938,6 +8219,33 @@ if (savedAge !== null && document.getElementById("userAge")) {
                 <button class="btn-cancel" onclick="closeVideoModal()">Fermer</button>
                 <button class="btn-record" id="btnGenVideo" onclick="generateVideo()">
                     <span class="pulse-dot"></span> Générer la vidéo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── [HTML] IMAGE MODAL ─────────────────────────────── -->
+<div class="modal-overlay" id="imageModalOverlay" onclick="closeImageIfOverlay(event)">
+    <div class="modal-box modal-box-wide">
+        <div class="modal-header">
+            <h3><svg class="ic"><use href="#i-camera"/></svg> Générer une image à partager</h3>
+            <button class="modal-close" onclick="closeImageModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="image-preview-wrap">
+                <canvas id="imageCanvas" width="1080" height="1080"></canvas>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+                <label style="font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Photo de fond :</label>
+                <button class="btn-sm" onclick="document.getElementById('imageBgInput').click()"><svg class="ic"><use href="#i-camera"/></svg> Choisir</button>
+                <input type="file" id="imageBgInput" accept="image/*" class="hidden" onchange="loadImageBg(event)">
+                <button class="btn-sm" onclick="clearImageBg()"><svg class="ic"><use href="#i-x"/></svg> Sans fond</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeImageModal()">Fermer</button>
+                <button class="btn-confirm" id="btnGenImage" onclick="generateImage()">
+                    <svg class="ic"><use href="#i-download"/></svg> Télécharger l'image
                 </button>
             </div>
         </div>
