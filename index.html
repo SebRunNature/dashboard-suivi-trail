@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.anthropic.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self';">
     <title>Suivi Trail – Run Nature</title>
 
     <!-- PWA -->
@@ -4456,7 +4457,7 @@ function exportPDF() {
         @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
     </style></head><body>
     <div class="header">
-        <div><h1>🏔️ RUN NATURE</h1><p>Suivi Préparation Trail${goal ? ' · ' + goal.name : ''}</p></div>
+        <div><h1>🏔️ RUN NATURE</h1><p>Suivi Préparation Trail${goal ? ' · ' + esc(goal.name) : ''}</p></div>
         <div class="header-right">Exporté le ${today}<br>${entries.length} séance(s) au total</div>
     </div>
     <div class="summary">
@@ -4465,7 +4466,7 @@ function exportPDF() {
         <div class="sum-box"><div class="sum-label">⏱️ Heures total</div><div class="sum-val">${totalH} h</div></div>
         <div class="sum-box"><div class="sum-label">📅 Séances</div><div class="sum-val">${entries.length}</div></div>
     </div>
-    ${goal ? `<div class="goal-box">🎯 <strong>Trail objectif :</strong> ${goal.name} · ${goal.dist} km · D+ ${(goal.dplus||0).toLocaleString()} m${goal.date ? ' · ' + new Date(goal.date).toLocaleDateString('fr-FR') : ''}</div>` : ''}
+    ${goal ? `<div class="goal-box">🎯 <strong>Trail objectif :</strong> ${esc(goal.name)} · ${goal.dist} km · D+ ${(goal.dplus||0).toLocaleString()} m${goal.date ? ' · ' + new Date(goal.date).toLocaleDateString('fr-FR') : ''}</div>` : ''}
     <table><thead><tr>
         <th>Date</th><th>Moment</th><th>Type</th><th>Distance</th><th>Durée</th>
         <th>D+</th><th>Vitesse</th><th>RPE</th><th>BPM</th><th>Kcal</th><th>Notes</th>
@@ -6547,7 +6548,7 @@ function printCoachPlan() {
   <h1>📅 Plan Coach IA — Semaine prochaine</h1>
   <p>${dateStr ? 'Généré le ' + dateStr : 'Run Nature · Dashboard Trail'} · www.run-nature.com</p>
 </div>
-${goal ? `<div class="goal-box">🎯 <strong>Objectif :</strong> ${goal.name || '—'} · ${goal.dist ? goal.dist + ' km' : ''} · D+ ${goal.dplus ? goal.dplus + ' m' : '—'}${goal.date ? ' · ' + new Date(goal.date).toLocaleDateString('fr-FR') : ''}</div>` : ''}
+${goal ? `<div class="goal-box">🎯 <strong>Objectif :</strong> ${esc(goal.name || '—')} · ${goal.dist ? goal.dist + ' km' : ''} · D+ ${goal.dplus ? goal.dplus + ' m' : '—'}${goal.date ? ' · ' + new Date(goal.date).toLocaleDateString('fr-FR') : ''}</div>` : ''}
 <table>
   <thead><tr><th>Jour</th><th>Séance</th><th>Détail</th></tr></thead>
   <tbody>${rowsHtml}</tbody>
@@ -6882,8 +6883,8 @@ function renderGoalBar() {
         else if (diff === 0) daysLeft = `<span>📅 C'est aujourd'hui !</span>`;
     }
     const nameHtml = goal.url
-        ? `<a href="${goal.url}" target="_blank" rel="noopener">${goal.name}</a>`
-        : goal.name;
+        ? `<a href="${esc(goal.url)}" target="_blank" rel="noopener">${esc(goal.name)}</a>`
+        : esc(goal.name);
     name.className = 'tg-name';
     name.innerHTML = nameHtml;
     let statsEl = bar.querySelector('.tg-stats');
