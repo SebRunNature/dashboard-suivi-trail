@@ -1767,6 +1767,65 @@
         }
         .cfw-item.current { color: var(--green); }
 
+        /* ── [CSS] FORME / FATIGUE / FRAÎCHEUR ─────────────────── */
+        .forme-chart { display: none; width: 100%; padding-top: 4px; }
+        .forme-chart.visible { display: block; }
+        .forme-tiles {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 10px; margin-bottom: 14px;
+        }
+        .forme-tile {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 12px; min-width: 0;
+        }
+        .ft-label {
+            font-size: .68rem; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; letter-spacing: .05em;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .ft-key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+        .ft-val { font-size: 1.5rem; font-weight: 700; color: var(--text); margin-top: 2px; line-height: 1.1; }
+        .ft-sub { font-size: .7rem; color: var(--muted); margin-top: 3px; }
+        .forme-meter { margin-top: 8px; }
+        .fm-track { position: relative; height: 6px; border-radius: 3px; background: var(--border); }
+        .fm-zone  { position: absolute; left: 40%; width: 25%; top: 0; bottom: 0; background: var(--green); opacity: .35; border-radius: 3px; }
+        .fm-pin {
+            position: absolute; top: -3px; width: 12px; height: 12px; margin-left: -6px;
+            border-radius: 50%; background: var(--muted); border: 2px solid var(--card); box-sizing: border-box;
+        }
+        .forme-tile.acwr.green .fm-pin { background: var(--green); }
+        .forme-tile.acwr.amber .fm-pin { background: var(--amber); }
+        .forme-tile.acwr.red   .fm-pin { background: var(--red); }
+        .forme-tile.acwr.sky   .fm-pin { background: var(--sky); }
+        .forme-svg-wrap { position: relative; }
+        .forme-svg { display: block; width: 100%; height: 240px; touch-action: pan-y; }
+        .forme-svg text { font-family: var(--font-main); font-size: 10px; font-weight: 600; fill: var(--muted); }
+        .forme-tip {
+            position: absolute; pointer-events: none; display: none; z-index: 5;
+            background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+            box-shadow: var(--shadow-lg); padding: 8px 10px; font-size: .72rem; color: var(--text); min-width: 160px;
+        }
+        .forme-tip .tt-date { font-weight: 700; margin-bottom: 4px; }
+        .forme-tip .tt-row  { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .forme-tip .tt-name { color: var(--muted); display: flex; align-items: center; gap: 5px; }
+        .forme-tip .tt-val  { font-weight: 700; font-variant-numeric: tabular-nums; }
+        .forme-legend {
+            display: flex; flex-wrap: wrap; gap: 14px; padding: 8px 4px 0;
+            font-size: .68rem; font-weight: 700; color: var(--muted);
+        }
+        .forme-legend span { display: flex; align-items: center; gap: 5px; }
+        .forme-note  { font-size: .7rem; color: var(--muted); line-height: 1.5; margin-top: 8px; }
+        .forme-empty { font-size: .85rem; color: var(--muted); padding: 40px 12px; text-align: center; }
+        .forme-table { margin-top: 8px; font-size: .72rem; }
+        .forme-table summary { cursor: pointer; color: var(--green); font-weight: 700; }
+        .forme-table table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        .forme-table th, .forme-table td {
+            padding: 4px 6px; text-align: right; font-size: .72rem;
+            border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums;
+        }
+        .forme-table th:first-child, .forme-table td:first-child { text-align: left; }
+        @media (max-width: 600px) { .forme-tiles { grid-template-columns: repeat(2, 1fr); } }
+
         [data-theme="dark"] .chart-card { background: var(--card); }
         [data-theme="dark"] .chart-tabs { background: #0f1a14; }
         [data-theme="dark"] .chart-tab.active { background: var(--card); }
@@ -2770,13 +2829,13 @@ th.effort-col, td.effort-col {
                 <button class="chart-tab active" id="ctab-km"     onclick="switchChartTab('km')">Km</button>
                 <button class="chart-tab"         id="ctab-dplus"  onclick="switchChartTab('dplus')">D+</button>
                 <button class="chart-tab"         id="ctab-both"   onclick="switchChartTab('both')">Les deux</button>
-                <button class="chart-tab"         id="ctab-charge" onclick="switchChartTab('charge')">Charge 4 sem</button>
+                <button class="chart-tab"         id="ctab-forme"  onclick="switchChartTab('forme')">Forme</button>
                 <button class="chart-tab"         id="ctab-rpe"    onclick="switchChartTab('rpe')">Zones RPE</button>
             </div>
         </div>
         <div class="chart-wrap">
             <canvas id="weeklyChart"></canvas>
-            <div id="chargeHbar" class="hbar-chart"></div>
+            <div id="formeChart" class="forme-chart"></div>
             <div id="rpeHbar"    class="hbar-chart"></div>
         </div>
         <div class="chart-footer-row" id="chartFooterRow"></div>
@@ -3765,6 +3824,7 @@ function renderAll() {
     renderTrainingPaces();     // allures Daniels (VDOT)
     renderPeriodization();     // et la frise de la date du jour
     renderWeeklyChart(entries);
+    if (_chartTab === 'forme') renderFormeChart(entries);
     applyFilters(); // handles renderTable with filters
     initCoach();
 }
@@ -7183,7 +7243,8 @@ function renderReadiness() {
 /* ═══════════════════════════════════════════════
    [JS:CHART] GRAPHIQUE HEBDOMADAIRE
 ═══════════════════════════════════════════════ */
-let _chartTab = 'both'; // km | dplus | both | charge | rpe
+let _chartTab = 'both'; // km | dplus | both | forme | rpe
+let _chartHeaderDefault = null;
 
 function switchChartTab(tab) {
     _chartTab = tab;
@@ -7191,22 +7252,33 @@ function switchChartTab(tab) {
     document.getElementById('ctab-' + tab).classList.add('active');
 
     const weekly     = document.getElementById('weeklyChart');
-    const chargeHbar = document.getElementById('chargeHbar');
+    const formeBox   = document.getElementById('formeChart');
     const rpeHbar    = document.getElementById('rpeHbar');
     const footer     = document.getElementById('chartFooterRow');
+    const title      = document.querySelector('#chartCard .chart-title');
+    const sub        = document.querySelector('#chartCard .chart-sub');
+    if (!_chartHeaderDefault) _chartHeaderDefault = { title: title.innerHTML, sub: sub.innerHTML };
 
     // Tout masquer
     weekly.style.display     = 'none';
     weekly.style.height      = '0';
-    chargeHbar.classList.remove('visible');
+    formeBox.classList.remove('visible');
     rpeHbar.classList.remove('visible');
     if (footer) footer.style.display = 'none';
 
+    if (tab === 'forme') {
+        title.innerHTML = '<svg class="ic"><use href="#i-trend"/></svg> Forme · Fatigue · Fraîcheur — 12 semaines';
+        sub.textContent = 'Modèle Banister — charge d\'une séance = RPE × minutes';
+    } else {
+        title.innerHTML = _chartHeaderDefault.title;
+        sub.innerHTML   = _chartHeaderDefault.sub;
+    }
+
     const entries = getEntries();
 
-    if (tab === 'charge') {
-        drawChargeChart(entries);
-        chargeHbar.classList.add('visible');
+    if (tab === 'forme') {
+        formeBox.classList.add('visible');
+        renderFormeChart(entries);
     } else if (tab === 'rpe') {
         drawRpeChart(entries);
         rpeHbar.classList.add('visible');
@@ -7218,88 +7290,242 @@ function switchChartTab(tab) {
     }
 }
 
-/* ── Charge comparative 4 semaines (barres horizontales) ── */
-function drawChargeChart(entries) {
-    const block = document.getElementById('chargeHbar');
-    block.innerHTML = '';
-    block.classList.add('visible');
+/* ═══════════════════════════════════════════════
+   [JS:FORME] FORME · FATIGUE · FRAÎCHEUR (modèle Banister / PMC)
+   Charge journalière = Σ RPE × minutes (toutes séances confondues).
+   Fatigue (ATL)  = moyenne mobile exponentielle courte  (τ =  7 j)
+   Fitness (CTL)  = moyenne mobile exponentielle longue  (τ = 42 j)
+   Forme   (TSB)  = Fitness − Fatigue
+   ACWR (charge aiguë/chronique) ≈ Fatigue / Fitness — repère de risque de blessure.
+═══════════════════════════════════════════════ */
+function fmtDateKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
 
-    // Calculer les 4 dernières semaines
-    const now = new Date();
-    const weeks = [];
-    for (let w = 0; w < 4; w++) {
-        const wEnd   = new Date(now); wEnd.setDate(now.getDate() - (now.getDay()===0?6:now.getDay()-1) + 6 - w*7); wEnd.setHours(23,59,59);
-        const wStart = new Date(wEnd); wStart.setDate(wEnd.getDate() - 6); wStart.setHours(0,0,0,0);
-        let km = 0, dp = 0, eqCAP = 0;
-        entries.forEach(e => {
-            const d = new Date(e.date);
-            if (d < wStart || d > wEnd) return;
-            const k = Number(e.km)||0;
-            const mins = Number(e.minutes)||0;
-            if (['Course','Trail','Tapis de course'].includes(e.type)) { km += k; dp += Number(e.dplus)||0; eqCAP += k; }
-            else if (e.type === 'Vélo Home Trainer') { const kHT = k > 0 ? k : (Number(e.speedKmh)||0)*(mins/60); eqCAP += kHT/2.4; }
-        });
-        const label = w === 0 ? 'Cette sem.' : w === 1 ? 'Sem. -1' : w === 2 ? 'Sem. -2' : 'Sem. -3';
-        weeks.unshift({ label, km: Math.round(km*10)/10, dp: Math.round(dp), eqCAP: Math.round(eqCAP*10)/10, isCurrent: w === 0 });
-    }
-
-    // Récupérer la cible D+ depuis l'objectif (localStorage)
-    const goal = (() => { try { return JSON.parse(localStorage.getItem('trailGoal')||'{}'); } catch(e){return{};} })();
-    const dpCible = goal.dplus ? Math.round(Number(goal.dplus)/8) : 0;
-
-    const maxKm = Math.max(...weeks.map(w=>w.km), 1);
-    const maxDp = Math.max(...weeks.map(w=>w.dp), dpCible||1, 1);
-
-    // Titre
-    const title = document.createElement('div');
-    title.style.cssText = 'font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 4px 4px;';
-    title.textContent = 'Charge km trail/course — 4 semaines';
-    block.appendChild(title);
-
-    // Barres KM
-    weeks.forEach(w => {
-        const pct = maxKm > 0 ? Math.round((w.km/maxKm)*100) : 0;
-        const color = w.isCurrent ? '#5dcaa5' : 'rgba(93,202,165,.45)';
-        const row = document.createElement('div'); row.className = 'hbar-row';
-        row.innerHTML = `
-            <div class="hbar-label">${w.label}</div>
-            <div class="hbar-track">
-                <div class="hbar-fill${w.isCurrent?' current':''}" style="width:${pct}%;background:${color}"></div>
-            </div>
-            <div class="hbar-value">${w.km} km</div>`;
-        block.appendChild(row);
+function computeFormeSeries(entries) {
+    const loadByDate = {};
+    entries.forEach(e => {
+        const mins = Number(e.minutes) || 0;
+        const rpe  = Number(e.rpe) || 0;
+        if (mins <= 0 || rpe <= 0) return;
+        loadByDate[e.date] = (loadByDate[e.date] || 0) + rpe * mins;
     });
+    const dateKeys = Object.keys(loadByDate);
+    if (dateKeys.length < 10) return null;
 
-    // Séparateur + D+
-    if (weeks.some(w => w.dp > 0)) {
-        const sep = document.createElement('div');
-        sep.style.cssText = 'font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:6px 4px 2px;';
-        sep.textContent = 'Dénivelé D+ — 4 semaines' + (dpCible ? ` (cible ~${dpCible}m/sem)` : '');
-        block.appendChild(sep);
+    const first = new Date(dateKeys.slice().sort()[0] + 'T12:00:00');
+    const today = new Date(); today.setHours(12,0,0,0);
+    const TAU_CTL = 42, TAU_ATL = 7;
+    const kCtl = 1 - Math.exp(-1/TAU_CTL);
+    const kAtl = 1 - Math.exp(-1/TAU_ATL);
 
-        weeks.forEach(w => {
-            const pct       = maxDp > 0 ? Math.round((w.dp/maxDp)*100) : 0;
-            const pctCible  = dpCible && maxDp > 0 ? Math.round((dpCible/maxDp)*100) : 0;
-            const color     = w.isCurrent ? '#e8a020' : 'rgba(232,160,32,.45)';
-            const row = document.createElement('div'); row.className = 'hbar-row';
-            row.innerHTML = `
-                <div class="hbar-label">${w.label}</div>
-                <div class="hbar-track">
-                    <div class="hbar-fill${w.isCurrent?' current':''}" style="width:${pct}%;background:${color}"></div>
-                    ${pctCible ? `<div class="hbar-target-line" style="left:${pctCible}%"></div>` : ''}
-                </div>
-                <div class="hbar-value">${w.dp}m</div>`;
-            block.appendChild(row);
-        });
+    const days = [];
+    let ctl = 0, atl = 0;
+    for (let d = new Date(first); d <= today; d.setDate(d.getDate()+1)) {
+        const key  = fmtDateKey(d);
+        const load = loadByDate[key] || 0;
+        ctl = ctl + (load - ctl) * kCtl;
+        atl = atl + (load - atl) * kAtl;
+        days.push({ date: key, d: new Date(d), load, ctl, atl, tsb: ctl - atl });
+    }
+    return days;
+}
+
+function tsbStatus(tsb) {
+    if (tsb >= 15)  return { color: 'sky',   label: 'Fraîcheur élevée — risque de perte de forme si ça dure' };
+    if (tsb >= 5)   return { color: 'green', label: 'Prêt à performer' };
+    if (tsb >= -10) return { color: 'green', label: 'Entraînement normal' };
+    if (tsb >= -30) return { color: 'amber', label: 'Fatigue en cours — phase de charge' };
+    return               { color: 'red',   label: 'Fatigue élevée — vigilance surcharge' };
+}
+function acwrStatus(r) {
+    if (r == null)  return { color: 'gray',  label: '—' };
+    if (r < 0.8)    return { color: 'sky',   label: 'Sous-charge (perte de forme possible)' };
+    if (r <= 1.3)   return { color: 'green', label: 'Zone optimale' };
+    if (r <= 1.5)   return { color: 'amber', label: 'Vigilance — charge en hausse rapide' };
+    return                { color: 'red',   label: 'Risque élevé — charge trop rapide' };
+}
+
+function renderFormeChart(entries) {
+    const box = document.getElementById('formeChart');
+    if (!box) return;
+    const days = computeFormeSeries(entries);
+    if (!days) {
+        box.innerHTML = '<div class="forme-empty">📊 Pas encore assez d\'historique pour calculer ta courbe de forme.<br>Continue à enregistrer tes séances avec un RPE — la courbe se construit sur plusieurs semaines.</div>';
+        return;
     }
 
-    // Légende
-    const legend = document.createElement('div'); legend.className = 'hbar-legend';
-    legend.innerHTML = `
-        <div class="hbar-legend-item"><div class="hbar-legend-dot" style="background:#5dcaa5"></div>Semaine en cours</div>
-        <div class="hbar-legend-item"><div class="hbar-legend-dot" style="background:rgba(93,202,165,.45)"></div>Semaines précédentes</div>
-        ${dpCible ? '<div class="hbar-legend-item"><div class="hbar-legend-dot" style="background:#e8a020"></div>Ligne cible D+</div>' : ''}`;
-    block.appendChild(legend);
+    const shown = days.slice(-84); // fenêtre d'affichage : 12 semaines max
+    const last  = days[days.length - 1];
+    const acwr  = last.ctl > 0.5 ? last.atl / last.ctl : null;
+    const tSt   = tsbStatus(last.tsb);
+    const aSt   = acwrStatus(acwr);
+
+    // ── Tuiles ──────────────────────────────────
+    const tilesHtml = `
+        <div class="forme-tiles">
+            <div class="forme-tile">
+                <div class="ft-label"><span class="ft-key" style="background:var(--green)"></span>Fitness (CTL)</div>
+                <div class="ft-val">${Math.round(last.ctl)}</div>
+                <div class="ft-sub">Charge chronique · moy. 42j</div>
+            </div>
+            <div class="forme-tile">
+                <div class="ft-label"><span class="ft-key" style="background:var(--amber)"></span>Fatigue (ATL)</div>
+                <div class="ft-val">${Math.round(last.atl)}</div>
+                <div class="ft-sub">Charge aiguë · moy. 7j</div>
+            </div>
+            <div class="forme-tile">
+                <div class="ft-label"><span class="ft-key" style="background:var(--sky)"></span>Forme (TSB)</div>
+                <div class="ft-val" style="color:var(--${tSt.color==='gray'?'muted':tSt.color})">${last.tsb>0?'+':''}${Math.round(last.tsb)}</div>
+                <div class="ft-sub">${esc(tSt.label)}</div>
+            </div>
+            <div class="forme-tile acwr ${aSt.color}">
+                <div class="ft-label">ACWR (aigu/chronique)</div>
+                <div class="ft-val">${acwr!=null ? acwr.toFixed(2) : '—'}</div>
+                <div class="forme-meter">
+                    <div class="fm-track"><div class="fm-zone"></div>${acwr!=null ? `<div class="fm-pin" style="left:${Math.min(100,Math.max(0,acwr/2*100)).toFixed(1)}%"></div>` : ''}</div>
+                </div>
+                <div class="ft-sub">${esc(aSt.label)}</div>
+            </div>
+        </div>`;
+
+    // ── Graphique SVG ───────────────────────────
+    const W = box.clientWidth || 680, H = 240;
+    const PAD_L = 34, PAD_R = 62, PAD_T = 18, PAD_B = 22;
+    const chartW = W - PAD_L - PAD_R, chartH = H - PAD_T - PAD_B;
+    const n = shown.length;
+
+    const allVals = shown.flatMap(d => [d.ctl, d.atl, d.tsb]);
+    const rawMin  = Math.min(0, ...allVals), rawMax = Math.max(...allVals, 1);
+    const pad     = Math.max((rawMax - rawMin) * 0.14, 4);
+    const yMin = rawMin - pad, yMax = rawMax + pad;
+
+    const xAt = i => PAD_L + (n === 1 ? 0 : (i / (n - 1)) * chartW);
+    const yAt = v => PAD_T + chartH - ((v - yMin) / (yMax - yMin)) * chartH;
+    const y0  = yAt(0);
+
+    const pathFor = key => shown.map((d, i) => `${i===0?'M':'L'}${xAt(i).toFixed(1)},${yAt(d[key]).toFixed(1)}`).join(' ');
+
+    // Gridlines (4) + ligne zéro
+    let gridSvg = '';
+    for (let i = 0; i <= 4; i++) {
+        const v = yMin + (yMax - yMin) * (i / 4);
+        const y = yAt(v).toFixed(1);
+        gridSvg += `<line x1="${PAD_L}" y1="${y}" x2="${PAD_L+chartW}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+    }
+    gridSvg += `<line x1="${PAD_L}" y1="${y0.toFixed(1)}" x2="${PAD_L+chartW}" y2="${y0.toFixed(1)}" stroke="var(--muted)" stroke-width="1"/>`;
+    gridSvg += `<text x="${PAD_L-6}" y="${y0.toFixed(1)}" text-anchor="end" dominant-baseline="middle">0</text>`;
+
+    // Aire Forme (TSB) shaded relative à zéro
+    const tsbArea = `M${xAt(0).toFixed(1)},${y0.toFixed(1)} ` +
+        shown.map((d,i) => `L${xAt(i).toFixed(1)},${yAt(d.tsb).toFixed(1)}`).join(' ') +
+        ` L${xAt(n-1).toFixed(1)},${y0.toFixed(1)} Z`;
+
+    const lastX = xAt(n-1).toFixed(1);
+    const endDot = (key, color) => `<circle cx="${lastX}" cy="${yAt(last[key]).toFixed(1)}" r="5" fill="${color}" stroke="var(--card)" stroke-width="2"/>`;
+    const endLabel = (key, color, txt, dy) => `<text x="${(Number(lastX)+9).toFixed(1)}" y="${(yAt(last[key])+dy).toFixed(1)}" fill="var(--text)" font-weight="700">${txt}</text>`;
+
+    const svg = `
+        <svg class="forme-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Courbe de forme sur ${shown.length} jours">
+            ${gridSvg}
+            <path d="${tsbArea}" fill="var(--sky)" opacity=".12"/>
+            <path d="${pathFor('ctl')}" fill="none" stroke="var(--green)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="${pathFor('atl')}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="${pathFor('tsb')}" fill="none" stroke="var(--sky)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            ${endDot('ctl','var(--green)')}${endDot('atl','var(--amber)')}${endDot('tsb','var(--sky)')}
+            ${endLabel('ctl','var(--green)','Fitness',4)}
+            ${endLabel('atl','var(--amber)','Fatigue',4)}
+            ${endLabel('tsb','var(--sky)','Forme',4)}
+            <line class="forme-crosshair" x1="0" y1="${PAD_T}" x2="0" y2="${PAD_T+chartH}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3,3" style="display:none"/>
+            <rect class="forme-hitbox" x="${PAD_L}" y="0" width="${chartW}" height="${H}" fill="transparent"/>
+        </svg>`;
+
+    // ── Table hebdo (accessibilité) ─────────────
+    const weeksAgg = [];
+    for (let i = shown.length - 1; i >= 0; i -= 7) {
+        const wDays = shown.slice(Math.max(0, i-6), i+1);
+        if (!wDays.length) continue;
+        const wLoad = wDays.reduce((s,d)=>s+d.load,0);
+        const endD  = wDays[wDays.length-1];
+        weeksAgg.unshift({ label: endD.d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), load: Math.round(wLoad), ctl: Math.round(endD.ctl), atl: Math.round(endD.atl), tsb: Math.round(endD.tsb) });
+    }
+    const tableRows = weeksAgg.slice(-12).map(w =>
+        `<tr><td>${esc(w.label)}</td><td>${w.load}</td><td>${w.ctl}</td><td>${w.atl}</td><td>${w.tsb>0?'+':''}${w.tsb}</td></tr>`
+    ).join('');
+
+    box.innerHTML = `
+        ${tilesHtml}
+        <div class="forme-svg-wrap">${svg}<div class="forme-tip" id="formeTip"></div></div>
+        <div class="forme-legend">
+            <span><span class="ft-key" style="background:var(--green)"></span>Fitness — charge chronique (42j)</span>
+            <span><span class="ft-key" style="background:var(--amber)"></span>Fatigue — charge aiguë (7j)</span>
+            <span><span class="ft-key" style="background:var(--sky)"></span>Forme — Fitness − Fatigue</span>
+        </div>
+        <div class="forme-note">💡 Forme > +5 : plutôt frais. Entre -10 et -30 : fatigue normale en phase de charge. Sous -30 : vigilance surcharge. Ces repères sont indicatifs, pas une prescription médicale.</div>
+        <details class="forme-table">
+            <summary>Voir le détail semaine par semaine</summary>
+            <table>
+                <thead><tr><th>Semaine</th><th>Charge</th><th>Fitness</th><th>Fatigue</th><th>Forme</th></tr></thead>
+                <tbody>${tableRows}</tbody>
+            </table>
+        </details>`;
+
+    attachFormeTooltip(box, shown, { PAD_L, chartW, PAD_T, chartH, xAt, yAt });
+}
+
+function attachFormeTooltip(box, shown, geo) {
+    const svgEl = box.querySelector('.forme-svg');
+    const hit   = box.querySelector('.forme-hitbox');
+    const cross = box.querySelector('.forme-crosshair');
+    const tip   = box.querySelector('#formeTip');
+    if (!svgEl || !hit) return;
+
+    function showAt(clientX) {
+        const rect = svgEl.getBoundingClientRect();
+        const scaleX = geo.chartW && rect.width ? (svgEl.viewBox.baseVal.width / rect.width) : 1;
+        const svgX = (clientX - rect.left) * scaleX;
+        let i = Math.round(((svgX - geo.PAD_L) / geo.chartW) * (shown.length - 1));
+        i = Math.max(0, Math.min(shown.length - 1, i));
+        const d = shown[i];
+        const x = geo.xAt(i);
+        cross.setAttribute('x1', x.toFixed(1));
+        cross.setAttribute('x2', x.toFixed(1));
+        cross.style.display = 'block';
+
+        const dateStr = d.d.toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' });
+        tip.innerHTML = '';
+        const dEl = document.createElement('div'); dEl.className = 'tt-date'; dEl.textContent = dateStr;
+        tip.appendChild(dEl);
+        [['Fitness', d.ctl, 'var(--green)'], ['Fatigue', d.atl, 'var(--amber)'], ['Forme', d.tsb, 'var(--sky)']].forEach(([name, val, color]) => {
+            const row = document.createElement('div'); row.className = 'tt-row';
+            const nameEl = document.createElement('span'); nameEl.className = 'tt-name';
+            const dot = document.createElement('span'); dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;`;
+            nameEl.appendChild(dot); nameEl.appendChild(document.createTextNode(name));
+            const valEl = document.createElement('span'); valEl.className = 'tt-val';
+            valEl.textContent = (val > 0 && name === 'Forme' ? '+' : '') + Math.round(val);
+            row.appendChild(nameEl); row.appendChild(valEl);
+            tip.appendChild(row);
+        });
+        if (d.load > 0) {
+            const row = document.createElement('div'); row.className = 'tt-row';
+            row.style.marginTop = '4px'; row.style.opacity = '.75';
+            row.appendChild(document.createTextNode('Charge du jour'));
+            const v = document.createElement('span'); v.className = 'tt-val'; v.textContent = Math.round(d.load);
+            row.appendChild(v);
+            tip.appendChild(row);
+        }
+
+        const wrapRect = box.querySelector('.forme-svg-wrap').getBoundingClientRect();
+        const px = rect.left - wrapRect.left + x / scaleX;
+        tip.style.display = 'block';
+        tip.style.left = Math.min(Math.max(px - 70, 0), wrapRect.width - 170) + 'px';
+        tip.style.top  = '4px';
+    }
+    function hide() { cross.style.display = 'none'; tip.style.display = 'none'; }
+
+    hit.addEventListener('pointermove', e => showAt(e.clientX));
+    hit.addEventListener('pointerleave', hide);
+    hit.addEventListener('touchmove', e => { if (e.touches[0]) showAt(e.touches[0].clientX); }, { passive: true });
 }
 
 /* ── Répartition RPE par zones (barres horizontales) ── */
