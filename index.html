@@ -4730,6 +4730,8 @@ function loadData() {
     setTimeout(autoBackupIfNeeded, 2000);
     const gDist = document.getElementById('g-dist');
     if (gDist) gDist.addEventListener('input', updateGoalPreview);
+    const gDplus = document.getElementById('g-dplus');
+    if (gDplus) gDplus.addEventListener('input', updateGoalPreview);
     loadUserInfo();
 }
 
@@ -5833,7 +5835,7 @@ const TRAIL_REFS = [
     { dist: 50,  kmMin: 60,  kmMax: 90,  dpMin: 2500, dpMax: 4000, hMin: 8,  hMax: 12, longMin: 240, longMax: 300, remark: 'Back-to-back possibles ; volume > 8h/semaine fortement conseillé.' },
     { dist: 100, kmMin: 70,  kmMax: 110, dpMin: 3500, dpMax: 5500, hMin: 10, hMax: 15, longMin: 300, longMax: 420, remark: 'D+ hebdo ≈ D+ course ; longues sorties + back-to-back obligatoires.' },
     { dist: 150, kmMin: 80,  kmMax: 130, dpMin: 4000, dpMax: 6000, hMin: 12, hMax: 17, longMin: 360, longMax: 480, remark: 'Très haut volume ; multi-jours ; récupération critique.' },
-    { dist: 200, kmMin: 90,  kmMax: 140, dpMin: 2000, dpMax: 4000, hMin: 13, hMax: 18, longMin: 420, longMax: 540, remark: 'Ultra long : priorité endurance, marche active, gestion nutrition et sommeil. D+ progressif sur la durée.' }
+    { dist: 200, kmMin: 90,  kmMax: 140, dpMin: 4500, dpMax: 6500, hMin: 13, hMax: 18, longMin: 420, longMax: 540, remark: 'Ultra long : priorité endurance, marche active, gestion nutrition et sommeil. D+ progressif sur la durée.' }
 ];
 
 /* ═══════════════════════════════════════════════
@@ -5851,10 +5853,13 @@ var TRAIL_DATA = {
     },
     getPlan: function(dist, objectif, genre, dplus) {
         var isPerf = objectif === 'perf';
-        var ratio  = isPerf ? 2.2 : 1.3;
+        // Ratio Performance abaissé (2.2 → 1.9) et plafond réduit (160 → 140 km/sem) :
+        // au-delà de ~75km, l'ancien réglage donnait la même charge maximale (jusqu'à 176 km/sem)
+        // à un objectif de 80km et à un objectif de 300km, un volume non tenable en continu.
+        var ratio  = isPerf ? 1.9 : 1.3;
         var kmBase = Math.round(dist * ratio);
         // Plafonnement réaliste
-        if (isPerf && kmBase > 160) kmBase = 160;
+        if (isPerf && kmBase > 140) kmBase = 140;
         if (!isPerf && kmBase > 90) kmBase = 90;
         var kmMin = Math.round(kmBase * 0.9);
         var kmMax = Math.round(kmBase * 1.1);
@@ -6842,16 +6847,21 @@ function clearGoal() {
     showToast('🗑 Trail objectif supprimé.');
 }
 function updateGoalPreview() {
-    const dist = parseFloat(document.getElementById('g-dist').value) || 0;
-    const ref  = getRefForDistance(dist);
-    const box  = document.getElementById('goalRefPreview');
-    const cont = document.getElementById('goalRefContent');
+    const dist   = parseFloat(document.getElementById('g-dist').value) || 0;
+    const dplus  = parseFloat(document.getElementById('g-dplus')?.value) || 0;
+    const isPerf = document.getElementById('g-goal')?.value === 'perf';
+    const ref    = getRefForDistance(dist);
+    const box    = document.getElementById('goalRefPreview');
+    const cont   = document.getElementById('goalRefContent');
     if (!ref || !dist) { box.style.display = 'none'; return; }
     box.style.display = 'block';
+    // D+ hebdo dérivé du D+ réel de la course si renseigné, sinon estimation par palier de distance
+    const dpMin = dplus ? Math.round(dplus * (isPerf ? 0.85 : 0.55)) : ref.dpMin;
+    const dpMax = dplus ? Math.round(dplus * (isPerf ? 1.25 : 0.85)) : ref.dpMax;
     cont.innerHTML = `
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
             <div><strong>📏 Km hebdo :</strong> ${ref.kmMin}–${ref.kmMax} km/sem</div>
-            <div><strong>⛰️ D+ hebdo :</strong> ${ref.dpMin.toLocaleString()}–${ref.dpMax.toLocaleString()} m/sem</div>
+            <div><strong>⛰️ D+ hebdo :</strong> ${dpMin.toLocaleString()}–${dpMax.toLocaleString()} m/sem</div>
             <div><strong>⏱️ Heures :</strong> ${ref.hMin}–${ref.hMax} h/sem</div>
             <div><strong>🏃 Sortie longue :</strong> ${ref.longMin}–${ref.longMax} min</div>
         </div>
@@ -7067,11 +7077,20 @@ function renderReadiness() {
     var kmMaxTarget = plan.kmMax;
     var hMinTarget  = plan.hMin;
     var hMaxTarget  = plan.hMax;
-    // Multiplicateur performance : +10% pour les ultras (≥100km), +20% pour les distances courtes
-    // Au-delà de 100km, +20% de D+ serait irréaliste — on plafonne à +10%
-    const perfMult = (isPerf && ref.dist >= 100) ? 1.1 : (isPerf ? 1.2 : 1.0);
-    var dpMinTarget = ref.dpMin * perfMult;
-    var dpMaxTarget = ref.dpMax * perfMult;
+    // Cible D+ hebdo dérivée du D+ RÉEL de la course visée (goal.dplus), pas d'un forfait
+    // par palier de distance : deux courses de 206 km, l'une plate et l'autre à 8000m D+,
+    // n'ont pas du tout la même charge de dénivelé à préparer.
+    // Repère : viser en semaine de pic ~55-85% du D+ course pour un Finisher, ~85-125% pour
+    // un objectif Performance (sans dplus renseigné : on retombe sur l'estimation par palier).
+    var dpMinTarget, dpMaxTarget;
+    if (goal.dplus) {
+        dpMinTarget = goal.dplus * (isPerf ? 0.85 : 0.55);
+        dpMaxTarget = goal.dplus * (isPerf ? 1.25 : 0.85);
+    } else {
+        const perfMult = (isPerf && ref.dist >= 100) ? 1.1 : (isPerf ? 1.2 : 1.0);
+        dpMinTarget = ref.dpMin * perfMult;
+        dpMaxTarget = ref.dpMax * perfMult;
+    }
 
     var entries = getEntries();
     if (!entries.length) {
