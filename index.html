@@ -7170,8 +7170,9 @@ function renderReadiness() {
         var km = 0, dp = 0, mins = 0;
         entries.filter(function(e) { var d=new Date(e.date); return d>=wStart && d<=wEnd; })
                .forEach(function(e) {
-                   if (['Course','Trail'].indexOf(e.type) >= 0) { km+=Number(e.km)||0; dp+=Number(e.dplus)||0; }
-                   else if (e.type === 'Marche') { dp+=Number(e.dplus)||0; } // D+ marche compte, pas les km
+                   // Km et D+ comptent pour Course/Trail/Tapis de course (cohérent avec le Coach IA),
+                   // et désormais aussi pour la Marche (avant : D+ comptait, pas les km).
+                   if (['Course','Trail','Tapis de course','Marche'].indexOf(e.type) >= 0) { km+=Number(e.km)||0; dp+=Number(e.dplus)||0; }
                    mins += Number(e.minutes)||0;
                });
         weeks.push({ km: km, dp: dp, h: mins/60 });
@@ -7782,7 +7783,7 @@ function renderWeeklyChart(entries) {
 
         let km = 0, dp = 0;
         entries.forEach(e => {
-            if (!['Course','Trail'].includes(e.type)) return;
+            if (!['Course','Trail','Tapis de course','Marche'].includes(e.type)) return;
             const d = new Date(e.date);
             if (d >= wStart && d <= wEnd) {
                 km += Number(e.km)    || 0;
