@@ -7173,6 +7173,12 @@ function renderReadiness() {
                    // Km et D+ comptent pour Course/Trail/Tapis de course (cohérent avec le Coach IA),
                    // et désormais aussi pour la Marche (avant : D+ comptait, pas les km).
                    if (['Course','Trail','Tapis de course','Marche'].indexOf(e.type) >= 0) { km+=Number(e.km)||0; dp+=Number(e.dplus)||0; }
+                   // Vélo Home Trainer : converti en équivalent CAP (÷2.4), même logique que
+                   // la charge globale (Point F) — pas de D+ (pas de dénivelé réel sur home trainer).
+                   else if (e.type === 'Vélo Home Trainer') {
+                       var kmHT = (Number(e.km)||0) > 0 ? Number(e.km) : (Number(e.speedKmh)||0) * ((Number(e.minutes)||0)/60);
+                       km += kmHT / 2.4;
+                   }
                    mins += Number(e.minutes)||0;
                });
         weeks.push({ km: km, dp: dp, h: mins/60 });
