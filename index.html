@@ -4007,8 +4007,8 @@ function renderRecords(entries) {
 const ROWS_DEFAULT = 30; // séances affichées par défaut (~1 mois d'activité)
 let   _showAll     = false; // true quand l'utilisateur clique "Voir tout"
 
-function applyFilters() {
-    _showAll = false; // retour à 50 à chaque changement de filtre
+function applyFilters(keepPagination) {
+    if (!keepPagination) _showAll = false; // retour à 30 à chaque changement de filtre
     const type   = document.getElementById('fType').value;
     const period = document.getElementById('fPeriod').value;
     const rpe    = document.getElementById('fRpe').value;
@@ -4252,7 +4252,7 @@ function _updateShowMoreBtn(displayed, total) {
 
 function _toggleShowAll() {
     _showAll = !_showAll;
-    applyFilters();
+    applyFilters(true); // true = ne pas réinitialiser _showAll qu'on vient de basculer
     // Si on réduit, remonter en haut du tableau
     if (!_showAll) {
         const tc = document.querySelector('.table-card');
