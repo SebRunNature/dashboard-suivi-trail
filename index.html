@@ -4454,7 +4454,8 @@ function exportPDF() {
     // Compute totals
     let totalKm = 0, totalDp = 0, totalMin = 0;
     entries.forEach(e => {
-        if (['Course','Trail'].includes(e.type)) { totalKm += Number(e.km)||0; totalDp += Number(e.dplus)||0; }
+        // Même règle que l'encart readiness et le graphique hebdo : Course/Trail/Tapis/Marche
+        if (['Course','Trail','Tapis de course','Marche'].includes(e.type)) { totalKm += Number(e.km)||0; totalDp += Number(e.dplus)||0; }
         totalMin += Number(e.minutes)||0;
     });
     const totalH = (totalMin/60).toFixed(1);
@@ -6983,6 +6984,10 @@ function predictGoalTime() {
     if (!goal || !goal.dist) return null;
     const entries = getEntries();
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 120); // perfs des 4 derniers mois
+    // Volontairement Course/Trail uniquement (pas de Tapis de course) : l'allure tapis
+    // (bande qui défile, pas de vent/relief) ne reflète pas l'effort réel en extérieur/trail
+    // et fausserait la prédiction de chrono — contrairement au VO2max (estimateVO2max) qui
+    // inclut le tapis pour la forme générale.
     const refs = entries.filter(e =>
         ['Course','Trail'].includes(e.type) &&
         Number(e.km) >= 5 && Number(e.minutes) > 0 &&

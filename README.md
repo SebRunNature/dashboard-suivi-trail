@@ -13,7 +13,7 @@
 - **Charge globale** — intègre le cross-training (vélo HT ÷ 2,4 = équivalent CAP) et le tapis de course.
 - **Trail objectif + Readiness** — indicateur vert/orange/rouge selon ton volume réel vs ta course cible.
 - **Coach IA** (opt-in) — analyse ta semaine et génère un plan 7 jours personnalisé via Claude (Anthropic). Détecte surcharge, monotonie, progression trop rapide, D+ insuffisant — contextualisé à ton objectif.
-- **Graphiques charge 4 semaines et zones RPE** — répartition facile/modéré/dur avec indicateur polarisation 80/20.
+- **Graphiques charge 4 semaines et zones RPE** — courbe Forme/Fatigue/Fraîcheur (modèle Banister) et répartition facile/modéré/dur avec indicateur polarisation 80/20.
 - **Export PDF** — journal complet de séances + plan Coach IA imprimable.
 - **Partage image** — génère une image 1080×1080 style Coros/Garmin pour Instagram.
 - **Sauvegarde & restauration** — export/import complet des données au format JSON (fichier téléchargeable, indépendant du localStorage).
