@@ -12,6 +12,7 @@
 - **Stats en temps réel** — km, D+, RPE moyen, BPM, kcal, vitesse. Graphique hebdomadaire km/D+.
 - **Charge globale** — intègre le cross-training (vélo HT ÷ 2,4 = équivalent CAP) et le tapis de course.
 - **Trail objectif + Readiness** — indicateur vert/orange/rouge selon ton volume réel vs ta course cible.
+- **Chrono estimé + calibrage personnel** — prédiction de temps de course (modèle Riegel adapté trail, km + D+). S'affine automatiquement avec tes résultats de course réels au fil du temps — chaque utilisateur a son propre calibrage, stocké uniquement dans son navigateur.
 - **Coach IA** (opt-in) — analyse ta semaine et génère un plan 7 jours personnalisé via Claude (Anthropic). Détecte surcharge, monotonie, progression trop rapide, D+ insuffisant — contextualisé à ton objectif.
 - **Graphiques charge 4 semaines et zones RPE** — courbe Forme/Fatigue/Fraîcheur (modèle Banister) et répartition facile/modéré/dur avec indicateur polarisation 80/20.
 - **Export PDF** — journal complet de séances + plan Coach IA imprimable.
@@ -83,8 +84,8 @@ Incrémenter ce numéro à chaque déploiement pour que les utilisateurs reçoiv
 
 ## À propos
 
-Développé par **Sébastien** — traileur M45 luxembourgeois, VO₂max 54, en préparation pour [The Great Escape 200km / 8000D+](https://run-nature.com/2026/05/04/mon-objectif-ultime-pour-cette-annee-2026-the-great-escape-200k-8000d/) — septembre 2026.
+Développé par **Sébastien** — traileur luxembourgeois, pour sa propre préparation aux ultra-trails.
 
-L'app est utilisée chaque semaine pour ma propre préparation et améliorée en continu sur le terrain.
+L'app est utilisée chaque semaine pour ma préparation personnelle et améliorée en continu sur le terrain.
 
 **Run Nature** · [run-nature.com](https://run-nature.com) · Luxembourg
