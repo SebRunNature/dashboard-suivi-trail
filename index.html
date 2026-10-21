@@ -6979,9 +6979,13 @@ function renderGoalBar() {
    Modèle : distance-effort = km + D+/100 (1 km-effort ≈ 100 m D+).
    Extrapolation Riegel T2 = T1 × (D2/D1)^k avec k=1.07 (trail).
 ═══════════════════════════════════════════════ */
-function predictGoalTimeRaw() {
-    const goal = getGoal();
-    if (!goal || !goal.dist) return null;
+function predictGoalTimeRaw(distOverride, dplusOverride) {
+    let dist = distOverride, dplus = dplusOverride;
+    if (dist == null) {
+        const goal = getGoal();
+        if (!goal || !goal.dist) return null;
+        dist = goal.dist; dplus = goal.dplus;
+    }
     const entries = getEntries();
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 120); // perfs des 4 derniers mois
     // Volontairement Course/Trail uniquement (pas de Tapis de course) : l'allure tapis
@@ -6995,7 +6999,7 @@ function predictGoalTimeRaw() {
     );
     if (refs.length < 2) return null; // au moins 2 sorties de référence
 
-    const goalEff = Number(goal.dist) + (Number(goal.dplus) || 0) / 100;
+    const goalEff = Number(dist) + (Number(dplus) || 0) / 100;
     const preds = refs.map(e => {
         const dEff = Number(e.km) + (Number(e.dplus) || 0) / 100;
         if (dEff <= 0) return null;
@@ -7046,6 +7050,10 @@ function saveChronoCalibrationEntry(entry) {
     list.push(entry);
     localStorage.setItem('chronoCalibration', JSON.stringify(list));
 }
+function deleteChronoCalibEntry(id) {
+    const list = getChronoCalibration().filter(r => r.id !== id);
+    localStorage.setItem('chronoCalibration', JSON.stringify(list));
+}
 function getChronoCalibFactor() {
     const list = getChronoCalibration();
     if (!list.length) return null;
@@ -7084,15 +7092,47 @@ function renderChronoPredictor() {
     if (!box) return;
     const goal = getGoal();
     if (!goal || !goal.dist) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+
+    // Historique de calibrage — toujours visible dès qu'un résultat existe, peu importe
+    // si l'objectif courant a assez de données pour une prédiction en direct.
+    const allCalib = getChronoCalibration();
+    const historyHtml = allCalib.length ? `
+        <details class="forme-table" style="margin-top:10px;">
+            <summary>Historique de mes résultats enregistrés (${allCalib.length})</summary>
+            <table>
+                <thead><tr><th>Course</th><th>Prédit (brut)</th><th>Réel</th><th>Écart</th><th></th></tr></thead>
+                <tbody>${allCalib.slice().reverse().map(r => {
+                    const pct = Math.round((r.ratio - 1) * 100);
+                    return `<tr>
+                        <td>${esc(r.goalName)}</td>
+                        <td>${fmtChronoHM(r.predictedMedian)}</td>
+                        <td>${fmtChronoHM(r.actualMin)}</td>
+                        <td>${pct>=0?'+':''}${pct}%</td>
+                        <td><a href="#" onclick="deleteChronoCalibEntryUI(${r.id});return false;" style="color:var(--red);font-weight:700;">suppr.</a></td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>
+        </details>` : '';
+
+    // Lien générique : enregistrer le résultat de N'IMPORTE QUELLE course déjà disputée,
+    // indépendamment de l'objectif actuellement affiché (ex. objectif déjà changé entre-temps).
+    const manualBlockHtml = `
+        <div id="chronoManualBlock" style="margin-top:8px;">
+            <a href="#" onclick="openManualCalibForm();return false;" style="font-size:.7rem;font-weight:700;color:var(--muted);text-decoration:underline;">
+                ➕ Enregistrer le résultat d'une autre course (déjà terminée)
+            </a>
+        </div>`;
+
     const p = predictGoalTime();
     if (!p) {
-        box.style.display = 'block';
         box.innerHTML = `
             <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px;">⏱️ Chrono estimé — ${esc(goal.name)}</div>
-            <div style="font-size:.85rem;color:var(--muted);">Enregistre au moins 2 sorties Course/Trail de 5 km ou plus (avec durée) sur les 4 derniers mois pour obtenir une estimation.</div>`;
+            <div style="font-size:.85rem;color:var(--muted);">Enregistre au moins 2 sorties Course/Trail de 5 km ou plus (avec durée) sur les 4 derniers mois pour obtenir une estimation.</div>
+            ${manualBlockHtml}
+            ${historyHtml}`;
         return;
     }
-    box.style.display = 'block';
 
     const calibLine = p.calibrated
         ? `<div style="font-size:.7rem;color:var(--sky);margin-top:4px;">🎯 Ajusté à partir de ${p.calibN} course${p.calibN>1?'s':''} passée${p.calibN>1?'s':''} (${p.calibFactor>=1?'+':''}${Math.round((p.calibFactor-1)*100)}% vs formule générique).</div>`
@@ -7106,7 +7146,7 @@ function renderChronoPredictor() {
            </div>`
         : `<div id="chronoCalibBlock" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
                <a href="#" onclick="openChronoCalibForm();return false;" style="font-size:.72rem;font-weight:700;color:var(--green);">
-                   🏁 Course déjà disputée ? Enregistre ton temps réel pour affiner tes futures prédictions
+                   🏁 Cet objectif est déjà disputé ? Enregistre ton temps réel pour affiner tes futures prédictions
                </a>
            </div>`;
 
@@ -7123,7 +7163,63 @@ function renderChronoPredictor() {
             ${p.extrapolated ? '⚠️ Objectif bien plus long que tes sorties actuelles — fourchette élargie, fiabilité limitée.' : 'Affine-toi avec des sorties longues proches des conditions de course.'}
         </div>
         ${calibLine}
-        ${calibBlockHtml}`;
+        ${calibBlockHtml}
+        ${manualBlockHtml}
+        ${historyHtml}`;
+}
+
+function openManualCalibForm() {
+    const block = document.getElementById('chronoManualBlock');
+    if (!block) return;
+    block.innerHTML = `
+        <div style="font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:6px;">➕ Résultat d'une autre course :</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+            <input type="text" id="manualCalibName" placeholder="Nom de la course" style="flex:1;min-width:140px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+            <input type="number" id="manualCalibDist" placeholder="Distance (km)" min="1" style="width:120px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+            <input type="number" id="manualCalibDplus" placeholder="D+ (m)" min="0" style="width:100px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;">
+            <input type="number" id="manualCalibH" min="0" max="300" placeholder="h"
+                   style="width:60px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+            <span style="color:var(--muted);font-size:.8rem;">h</span>
+            <input type="number" id="manualCalibM" min="0" max="59" placeholder="min"
+                   style="width:60px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+            <span style="color:var(--muted);font-size:.8rem;">min</span>
+            <button onclick="saveManualCalibResult()" style="background:var(--green);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-weight:700;font-size:.78rem;cursor:pointer;">Enregistrer</button>
+            <button onclick="renderChronoPredictor()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:8px;font-weight:600;font-size:.78rem;cursor:pointer;">Annuler</button>
+        </div>`;
+}
+
+function saveManualCalibResult() {
+    const name  = document.getElementById('manualCalibName').value.trim();
+    const dist  = parseFloat(document.getElementById('manualCalibDist').value) || 0;
+    const dplus = parseFloat(document.getElementById('manualCalibDplus').value) || 0;
+    const h = parseInt(document.getElementById('manualCalibH').value) || 0;
+    const m = parseInt(document.getElementById('manualCalibM').value) || 0;
+    const actualMin = h*60 + m;
+    if (!name || !dist || actualMin <= 0) { showToast('⚠️ Renseigne au moins le nom, la distance et le temps.'); return; }
+    const raw = predictGoalTimeRaw(dist, dplus);
+    if (!raw) { showToast('⚠️ Pas assez de sorties de référence pour calculer un écart (2 minimum sur 4 mois).'); return; }
+    saveChronoCalibrationEntry({
+        id: Date.now(),
+        date: fmtDateKey(new Date()),
+        goalKey: name + '|manual|' + dist,
+        goalName: name,
+        goalDist: dist,
+        goalDplus: dplus,
+        predictedMedian: raw.median,
+        actualMin,
+        ratio: actualMin / raw.median
+    });
+    showToast('✅ Résultat enregistré — tes prochaines prédictions seront affinées.');
+    renderChronoPredictor();
+}
+
+function deleteChronoCalibEntryUI(id) {
+    if (!confirm('Supprimer ce résultat de calibrage ?')) return;
+    deleteChronoCalibEntry(id);
+    showToast('🗑 Résultat supprimé.');
+    renderChronoPredictor();
 }
 
 function openChronoCalibForm() {
