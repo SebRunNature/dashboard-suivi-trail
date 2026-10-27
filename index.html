@@ -508,6 +508,44 @@
         .record-chip .rc-value { font-size: 1.15rem; font-weight: 800; color: var(--text); }
         .record-chip .rc-date  { font-size: .7rem; color: var(--muted); }
         .record-chip.new-record { border-color: var(--amber); background: var(--amber-lt); }
+
+        /* ── [CSS] TROPHÉES ─────────────────────────────── */
+        .trophy-section { margin-top: 24px; }
+        .trophy-group { margin-top: 14px; }
+        .trophy-group:first-of-type { margin-top: 4px; }
+        .trophy-group-label {
+            font-size: .72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .6px; color: var(--muted); margin-bottom: 10px;
+        }
+        .trophy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            gap: 18px 8px;
+        }
+        .trophy-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+        .trophy-badge {
+            width: 78px; height: 90px;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: var(--font-display); color: #fff;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+        }
+        .trophy-badge .tb-bolt { width: 13px; height: 13px; opacity: .8; margin-bottom: 2px; }
+        .trophy-badge .tb-val { font-size: 1.1rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+        .trophy-item.locked .trophy-badge {
+            background: var(--border) !important; box-shadow: none;
+        }
+        .trophy-item.locked .trophy-badge .tb-bolt { display: none; }
+        .trophy-item.locked .trophy-badge .ic-lock { width: 20px; height: 20px; color: var(--muted); opacity: .6; }
+        .trophy-item .ic-lock { display: none; }
+        .trophy-item.locked .ic-lock { display: block; }
+        .trophy-item.locked .tb-val { display: none; }
+        .trophy-label { font-size: .72rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+        .trophy-item.locked .trophy-label { color: var(--muted); }
+        .trophy-badge.tier-1 { background: linear-gradient(145deg, #5bb8e0, #2f7fab); }
+        .trophy-badge.tier-2 { background: linear-gradient(145deg, var(--green-bright,#5dcaa5), var(--green-dk)); }
+        .trophy-badge.tier-3 { background: linear-gradient(145deg, #f0b54a, var(--amber)); }
+        .trophy-badge.tier-4 { background: linear-gradient(145deg, #ec6f6f, var(--red)); }
         .stat-card {
             background: var(--card);
             border-radius: var(--radius);
@@ -2326,6 +2364,10 @@ th.effort-col, td.effort-col {
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
             Mon objectif
         </button>
+        <button class="sb-item" onclick="sbScrollTo('trophySection'); sidebarClose()">
+            <svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 0-3 3"/></svg>
+            Trophées
+        </button>
     </div>
 
     <div class="sb-divider"></div>
@@ -2631,6 +2673,19 @@ th.effort-col, td.effort-col {
 <div class="records-section" id="recordsSection" style="display:none">
     <div class="records-title"><svg class="ic"><use href="#i-trophy"/></svg> Records personnels</div>
     <div class="records-grid" id="recordsGrid"></div>
+</div>
+
+<!-- ── [HTML] TROPHÉES (rendu par renderTrophies) ─────────── -->
+<div class="records-section trophy-section" id="trophySection" style="display:none">
+    <div class="records-title"><svg class="ic"><use href="#i-trophy"/></svg> Trophées</div>
+    <div class="trophy-group">
+        <div class="trophy-group-label">Activités</div>
+        <div class="trophy-grid" id="trophyGridActivites"></div>
+    </div>
+    <div class="trophy-group">
+        <div class="trophy-group-label">Dénivelé cumulé</div>
+        <div class="trophy-grid" id="trophyGridDplus"></div>
+    </div>
 </div>
 
 <!-- ── [HTML] ALLURES D'ENTRAÎNEMENT (rendu par renderTrainingPaces) ── -->
@@ -3817,6 +3872,7 @@ function renderAll() {
     const entries = getEntries();
     renderStats(entries);
     renderRecords(entries);
+    renderTrophies(entries);
     renderReadiness();
     renderWeekView(entries);
     renderChargeIndicator(entries);
@@ -3997,6 +4053,73 @@ function renderRecords(entries) {
             <div class="rc-value">${c.value}</div>
             <div class="rc-date">${c.date}</div>
         </div>`).join('');
+    section.style.display = 'block';
+}
+
+/* ═══════════════════════════════════════════════
+   [JS:TROPHIES] COLLECTION DE TROPHÉES
+   Paliers d'activités (nombre de séances) et de dénivelé cumulé à vie.
+   Débloqués automatiquement dès que le total est atteint — aucune
+   saisie, aucun compte : tout vient du journal déjà enregistré.
+═══════════════════════════════════════════════ */
+const TROPHY_TIERS_ACTIVITES = [
+    { value: 1,   tier: 1 }, { value: 3,   tier: 1 }, { value: 5,   tier: 1 },
+    { value: 10,  tier: 1 }, { value: 20,  tier: 1 },
+    { value: 30,  tier: 2 }, { value: 40,  tier: 2 }, { value: 50,  tier: 2 },
+    { value: 75,  tier: 2 }, { value: 100, tier: 2 },
+    { value: 150, tier: 3 }, { value: 200, tier: 3 }, { value: 250, tier: 3 },
+    { value: 300, tier: 3 }, { value: 400, tier: 3 },
+    { value: 500, tier: 4 }, { value: 600, tier: 4 }, { value: 700, tier: 4 },
+    { value: 800, tier: 4 }, { value: 900, tier: 4 }, { value: 1000, tier: 4 }
+];
+const TROPHY_TIERS_DPLUS = [
+    { value: 1000,   tier: 1 },
+    { value: 5000,   tier: 1 },
+    { value: 8849,   tier: 2, label: 'Everest ⛰️' },
+    { value: 10000,  tier: 2 },
+    { value: 25000,  tier: 2 },
+    { value: 50000,  tier: 3 },
+    { value: 75000,  tier: 3 },
+    { value: 100000, tier: 3 },
+    { value: 150000, tier: 4 },
+    { value: 200000, tier: 4 },
+    { value: 300000, tier: 4 }
+];
+
+function fmtTrophyNum(n) {
+    return n >= 1000 ? (n % 1000 === 0 ? `${n/1000}k` : n.toLocaleString('fr-FR')) : String(n);
+}
+const TROPHY_ORDINAL_WORDS = { 1: 'Première activité', 3: 'Troisième activité', 5: 'Cinquième activité' };
+
+function renderTrophyGrid(containerId, tiers, total, ordinal) {
+    const grid = document.getElementById(containerId);
+    if (!grid) return;
+    grid.innerHTML = tiers.map(t => {
+        const unlocked = total >= t.value;
+        const label = t.label || (ordinal ? (TROPHY_ORDINAL_WORDS[t.value] || `${fmtTrophyNum(t.value)}${ordinal}`) : `${t.value.toLocaleString('fr-FR')} m D+`);
+        return `
+            <div class="trophy-item${unlocked ? '' : ' locked'}" title="${unlocked ? 'Débloqué' : 'Verrouillé'} — ${label}">
+                <div class="trophy-badge tier-${t.tier}">
+                    <svg class="ic tb-bolt"><use href="#i-bolt"/></svg>
+                    <span class="tb-val">${fmtTrophyNum(t.value)}</span>
+                    <svg class="ic ic-lock"><use href="#i-lock"/></svg>
+                </div>
+                <div class="trophy-label">${label}</div>
+            </div>`;
+    }).join('');
+}
+
+function renderTrophies(entries) {
+    const section = document.getElementById('trophySection');
+    if (!section) return;
+    if (!entries.length) { section.style.display = 'none'; return; }
+
+    const totalActivites = entries.length;
+    const totalDplus = entries.reduce((s, e) => s + (Number(e.dplus) || 0), 0);
+
+    renderTrophyGrid('trophyGridActivites', TROPHY_TIERS_ACTIVITES, totalActivites, 'e activité');
+    renderTrophyGrid('trophyGridDplus', TROPHY_TIERS_DPLUS, totalDplus, null);
+
     section.style.display = 'block';
 }
 
